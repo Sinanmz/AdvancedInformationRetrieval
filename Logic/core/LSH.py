@@ -17,6 +17,12 @@ class MinHashLSH:
         """
         self.documents = documents
         self.num_hashes = num_hashes
+        self.all_shingles = set()
+        self.doc_shingles = {}
+        for i, document in enumerate(self.documents):
+            shingles = self.shingle_document(document)
+            self.doc_shingles[i] = shingles
+        self.hash_functions = [self._make_hash_function(i) for i in range(num_hashes)]
 
     def shingle_document(self, document, k=2):
         """
@@ -34,7 +40,12 @@ class MinHashLSH:
         set
             A set of shingles.
         """
-        shingles = None
+        shingles = set()
+        for i in range(len(document) - k + 1):
+            shingle = document[i:i + k]
+            shingles.add(shingle)
+            self.all_shingles.add(shingle)
+
         return shingles
 
     def build_characteristic_matrix(self):
@@ -46,8 +57,25 @@ class MinHashLSH:
         numpy.ndarray
             The binary characteristic matrix.
         """
-        # TODO
-        return
+
+        shingles = list(self.all_shingles)
+        shingles.sort()
+        matrix = np.zeros((len(shingles), len(self.documents)))
+
+        for i, shingle in enumerate(shingles):
+            for j in range(len(self.documents)):
+                if shingle in self.doc_shingles[j]:
+                    matrix[i, j] = 1
+
+        return matrix
+    
+
+    def _make_hash_function(self, seed):
+        def hash_func(x):
+            random.seed(x + seed)
+            return random.randint(0, 2**16 - 1)
+        return hash_func
+
 
     def min_hash_signature(self):
         """
@@ -58,9 +86,18 @@ class MinHashLSH:
         numpy.ndarray
             The Min-Hash signatures matrix.
         """
-        # TODO
-        return
+        num_docs = len(self.documents)
+        signature_matrix = np.full((self.num_hashes, num_docs), np.inf)
 
+        for doc_idx, shingles in self.doc_shingles.items():
+            for i, hash_func in enumerate(self.hash_functions):
+                for shingle in shingles:
+                    hash_value = hash_func(hash(shingle))
+                    signature_matrix[i, doc_idx] = min(signature_matrix[i, doc_idx], hash_value)
+            
+        return signature_matrix
+
+        
     def lsh_buckets(self, signature, bands=10, rows_per_band=10):
         """
         Group documents into Locality-Sensitive Hashing (LSH) buckets based on Min-Hash signatures.
@@ -80,7 +117,24 @@ class MinHashLSH:
             A dictionary mapping bucket IDs to lists of document indices.
         """
         # TODO
-        return
+        buckets = {}
+        num_docs = signature.shape[1]
+        for band in range(bands):
+            for doc_idx in range(num_docs):
+                start_row = band * rows_per_band
+                end_row = start_row + rows_per_band
+                sub_signature = tuple(signature[start_row:end_row, doc_idx])
+
+                hash_id = hash(sub_signature)
+                bucket_id = int(str(hash_id) + str(band))
+
+                if bucket_id not in buckets:
+                    buckets[bucket_id] = [doc_idx]
+                else:
+                    buckets[bucket_id].append(doc_idx)
+
+        return buckets
+    
 
     def perform_lsh(self):
         """
@@ -91,8 +145,9 @@ class MinHashLSH:
         dict
             A dictionary mapping bucket IDs to lists of document indices.
         """
-        # TODO
-        return
+        signature = self.min_hash_signature()
+        buckets = self.lsh_buckets(signature)
+        return buckets
 
     def jaccard_score(self, first_set, second_set):
         """
@@ -110,8 +165,10 @@ class MinHashLSH:
         float
             Jaccard score.
         """
-        # TODO
-        pass
+        union = len(first_set.union(second_set))
+        intersection = len(first_set.intersection(second_set))
+        jaccard_score = intersection / union
+        return jaccard_score
 
     def jaccard_similarity_test(self, buckets, all_documents):
         """
