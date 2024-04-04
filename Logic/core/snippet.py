@@ -10,7 +10,7 @@ class Snippet:
         """
         self.number_of_words_on_each_side = number_of_words_on_each_side
 
-    def remove_stop_words_from_query(self, query):
+    def remove_stop_words_from_query(self, query, stopwords_path='./stopwords.txt'):
         """
         Remove stop words from the input string.
 
@@ -26,8 +26,14 @@ class Snippet:
         """
 
         # TODO: remove stop words from the query.
+        stopwords = []
+        with open(stopwords_path, 'r') as file:
+            stopwords = file.read().splitlines()
+        query = ' '.join([word for word in query.split() if word not in stopwords])
 
-        return
+        return query
+
+        
 
     def find_snippet(self, doc, query):
         """
@@ -52,5 +58,37 @@ class Snippet:
         not_exist_words = []
 
         # TODO: Extract snippet and the tokens which are not present in the doc.
+        doc = doc.split()
+        query = self.remove_stop_words_from_query(query, './stopwords.txt')
+        query = query.split()
+        occurances_dict = {query_word:[] for query_word in query}
+
+        for i in range(len(doc)):
+            if doc[i] in query or doc[i].lower() in query or doc[i].upper() in query or doc[i].capitalize() in query:
+                try:
+                    occurances_dict[doc[i]].append(i)
+                except:
+                    try:
+                        occurances_dict[doc[i].lower()].append(i)
+                    except:
+                        try:
+                            occurances_dict[doc[i].upper()].append(i)
+                        except:
+                            occurances_dict[doc[i].capitalize()].append(i)
+                
+
+        for query_word in query:
+            if len(occurances_dict[query_word]) == 0:
+                not_exist_words.append(query_word)
+
+        for query_word in query:
+            if len(occurances_dict[query_word]) == 0:
+                continue
+            for occurance in occurances_dict[query_word]:
+                start = max(0, occurance - self.number_of_words_on_each_side)
+                end = min(len(doc), occurance + self.number_of_words_on_each_side + 1)
+                query_w = doc[occurance]
+                final_snippet += ' '.join(doc[start:end]).replace(query_w, f'***{query_w}***') + ' ... '
+
 
         return final_snippet, not_exist_words
