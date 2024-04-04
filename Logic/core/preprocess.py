@@ -1,8 +1,8 @@
-
+import re
 
 class Preprocessor:
 
-    def __init__(self, documents: list):
+    def __init__(self, documents: list, stopwords_path):
         """
         Initialize the class.
 
@@ -13,8 +13,9 @@ class Preprocessor:
         """
         # TODO
         self.documents = documents
-        self.stopwords = []
-
+        with open(stopwords_path, 'r') as f:
+            self.stopwords = f.read().split('\n')
+        
     def preprocess(self):
         """
         Preprocess the text using the methods in the class.
@@ -24,8 +25,16 @@ class Preprocessor:
         List[str]
             The preprocessed documents.
         """
-         # TODO
-        return
+        # TODO
+        preprocessed_docs = []
+        for doc in self.documents:
+            doc = self.normalize(doc)
+            doc = self.remove_links(doc)
+            doc = self.remove_punctuations(doc)
+            words = self.tokenize(doc)
+            words = self.remove_stopwords(' '.join(words))
+            preprocessed_docs.append(' '.join(words))
+        return preprocessed_docs
 
     def normalize(self, text: str):
         """
@@ -42,7 +51,7 @@ class Preprocessor:
             The normalized text.
         """
         # TODO
-        return
+        return text.lower()
 
     def remove_links(self, text: str):
         """
@@ -60,7 +69,9 @@ class Preprocessor:
         """
         patterns = [r'\S*http\S*', r'\S*www\S*', r'\S+\.ir\S*', r'\S+\.com\S*', r'\S+\.org\S*', r'\S*@\S*']
         # TODO
-        return
+        for pattern in patterns:
+            text = re.sub(pattern, '', text)
+        return text
 
     def remove_punctuations(self, text: str):
         """
@@ -77,7 +88,8 @@ class Preprocessor:
             The text with punctuations removed.
         """
         # TODO
-        return
+        text = re.sub(r'[^\w\s]', '', text)
+        return text
 
     def tokenize(self, text: str):
         """
@@ -94,7 +106,7 @@ class Preprocessor:
             The list of words.
         """
         # TODO
-        return
+        return text.split()
 
     def remove_stopwords(self, text: str):
         """
@@ -111,5 +123,9 @@ class Preprocessor:
             The list of words with stopwords removed.
         """
         # TODO
-        return
+        words = text.split()
+        return [word for word in words if word not in self.stopwords]
+        
+
+
 
