@@ -32,10 +32,13 @@ class Index:
         """
 
         current_index = {}
-        #         TODO
+        # TODO
 
+        for document in self.preprocessed_documents:
+            current_index[document['id']] = document
+        
         return current_index
-
+    
     def index_stars(self):
         """
         Index the documents based on the stars.
@@ -47,8 +50,19 @@ class Index:
             So the index type is: {term: {document_id: tf}}
         """
 
-        #         TODO
-        pass
+        # TODO
+        stars_index = {}
+        for document in self.preprocessed_documents:
+            for star in document['stars']:
+                if star == 'N/A':
+                    continue
+                if star not in stars_index:
+                    stars_index[star] = {}
+                if document['id'] not in stars_index[star]:
+                    stars_index[star][document['id']] = 0
+                stars_index[star][document['id']] += 1
+        
+        return stars_index
 
     def index_genres(self):
         """
@@ -61,8 +75,19 @@ class Index:
             So the index type is: {term: {document_id: tf}}
         """
 
-        #         TODO
-        pass
+        # TODO
+        genres_index = {}
+        for document in self.preprocessed_documents:
+            for genre in document['genres']:
+                if genre == 'N/A':
+                    continue
+                if genre not in genres_index:
+                    genres_index[genre] = {}
+                if document['id'] not in genres_index[genre]:
+                    genres_index[genre][document['id']] = 0
+                genres_index[genre][document['id']] += 1
+
+        return genres_index
 
     def index_summaries(self):
         """
@@ -76,7 +101,15 @@ class Index:
         """
 
         current_index = {}
-        #         TODO
+        # TODO
+        for document in self.preprocessed_documents:
+            for summary in document['summaries']:
+                for word in summary.split():
+                    if word not in current_index:
+                        current_index[word] = {}
+                    if document['id'] not in current_index[word]:
+                        current_index[word][document['id']] = 0
+                    current_index[word][document['id']] += 1
 
         return current_index
 
@@ -98,8 +131,8 @@ class Index:
         """
 
         try:
-            #         TODO
-            pass
+            # TODO
+            return list(self.index[index_type][word].keys())
         except:
             return []
 
@@ -113,8 +146,33 @@ class Index:
             Document to add to all the indexes
         """
 
-        #         TODO
-        pass
+        # TODO
+        self.index[Indexes.DOCUMENTS.value][document['id']] = document
+        for star in document['stars']:
+            if star == 'N/A':
+                continue
+            if star not in self.index[Indexes.STARS.value]:
+                self.index[Indexes.STARS.value][star] = {}
+            if document['id'] not in self.index[Indexes.STARS.value][star]:
+                self.index[Indexes.STARS.value][star][document['id']] = 0
+            self.index[Indexes.STARS.value][star][document['id']] += 1
+        
+        for genre in document['genres']:
+            if genre == 'N/A':
+                continue
+            if genre not in self.index[Indexes.GENRES.value]:
+                self.index[Indexes.GENRES.value][genre] = {}
+            if document['id'] not in self.index[Indexes.GENRES.value][genre]:
+                self.index[Indexes.GENRES.value][genre][document['id']] = 0
+            self.index[Indexes.GENRES.value][genre][document['id']] += 1
+        
+        for summary in document['summaries']:
+            for word in summary.split():
+                if word not in self.index[Indexes.SUMMARIES.value]:
+                    self.index[Indexes.SUMMARIES.value][word] = {}
+                if document['id'] not in self.index[Indexes.SUMMARIES.value][word]:
+                    self.index[Indexes.SUMMARIES.value][word][document['id']] = 0
+                self.index[Indexes.SUMMARIES.value][word][document['id']] += 1
 
     def remove_document_from_index(self, document_id: str):
         """
@@ -126,8 +184,28 @@ class Index:
             ID of the document to remove from all the indexes
         """
 
-        #         TODO
-        pass
+        # TODO
+        document = self.index[Indexes.DOCUMENTS.value][document_id]
+        for star in document['stars']:
+            if star == 'N/A':
+                continue
+            del self.index[Indexes.STARS.value][star][document_id]
+            if len(self.index[Indexes.STARS.value][star]) == 0:
+                del self.index[Indexes.STARS.value][star]
+        for genre in document['genres']:
+            if genre == 'N/A':
+                continue
+            del self.index[Indexes.GENRES.value][genre][document_id]
+            if len(self.index[Indexes.GENRES.value][genre]) == 0:
+                del self.index[Indexes.GENRES.value][genre]
+        for summary in document['summaries']:
+            for word in summary.split():
+                del self.index[Indexes.SUMMARIES.value][word][document_id]
+                if len(self.index[Indexes.SUMMARIES.value][word]) == 0:
+                    del self.index[Indexes.SUMMARIES.value][word]
+        
+        del self.index[Indexes.DOCUMENTS.value][document_id]
+
 
     def check_add_remove_is_correct(self):
         """
@@ -201,13 +279,18 @@ class Index:
 
         if index_type is None:
             # TODO
-            pass
+            # pass
+            for index_type in self.index:
+                with open(os.path.join(path, index_type + '.json'), 'w') as f:
+                    json.dump(self.index[index_type], f)
 
         if index_type not in self.index:
             raise ValueError('Invalid index type')
 
-        #         TODO
-        pass
+        # TODO
+        # pass
+        with open(os.path.join(path, index_type + '.json'), 'w') as f:
+            json.dump(self.index[index_type], f)
 
     def load_index(self, path: str):
         """
@@ -219,8 +302,11 @@ class Index:
             Path to load the file
         """
 
-        #         TODO
-        pass
+        # TODO
+        # pass
+        for index_type in self.index:
+            with open(os.path.join(path, index_type + '.json'), 'r') as f:
+                self.index[index_type] = json.load(f)
 
     def check_if_index_loaded_correctly(self, index_type: str, loaded_index: dict):
         """
@@ -302,4 +388,5 @@ class Index:
             print('Indexing is wrong')
             return False
 
-# TODO: Run the class with needed parameters, then run check methods and finally report the results of check methods
+# TODO: Run the class with needed parameters, then run check methods and finally report the results of check 
+
