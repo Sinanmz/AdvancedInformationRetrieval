@@ -1,11 +1,40 @@
+import sys
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/indexer')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR')
+from search import SearchEngine
+from spell_correction import SpellCorrection
+from snippet import Snippet
+from indexes_enum import Indexes, Index_types
+
+
 from typing import Dict, List
-from core.search import SearchEngine
-from core.spell_correction import SpellCorrection
-from core.snippet import Snippet
-from core.indexes_enum import Indexes, Index_types
+# from core.search import SearchEngine
+# from core.spell_correction import SpellCorrection
+# from core.snippet import Snippet
+# from core.indexer.indexes_enum import Indexes, Index_types
 import json
 
-movies_dataset = None  # TODO
+
+
+data_path = '/Users/sina/Sem-5/MIR/Project/MIR/data/IMDB_Crawled.json'
+with open(data_path, 'r') as f:
+    data = json.load(f)
+
+movies_dataset = {}
+for movie in data:
+    temp = {'title': movie['title'], 'first_page_summary': movie['first_page_summary'], 
+            'URL': 'placeholder', 'stars': movie['stars'], 
+            'genres': movie['genres'], 'id': movie['id'],
+            'directors': movie['directors'], 'summaries': movie['summaries'],
+            'writers': movie['writers'], 'synopsis': movie['synopsis'],
+            'reviews': movie['reviews'], 
+            }
+    
+
+    movies_dataset[movie['id']] = temp
+          
 search_engine = SearchEngine()
 
 
@@ -33,7 +62,7 @@ def correct_text(text: str, all_documents: List[str]) -> str:
 def search(
     query: str,
     max_result_count: int,
-    method: str = "ltn-lnn",
+    method: str = "ltn.lnn",
     weights: list = [0.3, 0.3, 0.4],
     should_print=False,
     preferred_genre: str = None,
@@ -61,7 +90,12 @@ def search(
     list
     Retrieved documents with snippet
     """
-    weights = ...  # TODO
+    # TODO
+    weights = {
+        Indexes.STARS: weights[0],
+        Indexes.GENRES: weights[1],
+        Indexes.SUMMARIES: weights[2]
+    }
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )
