@@ -21,7 +21,7 @@ class Tiered_index:
         }
         # feel free to change the thresholds
         self.tiered_index = {
-            Indexes.STARS: self.convert_to_tiered_index(3, 2, Indexes.STARS),
+            Indexes.STARS: self.convert_to_tiered_index(2, 1, Indexes.STARS),
             Indexes.SUMMARIES: self.convert_to_tiered_index(10, 5, Indexes.SUMMARIES),
             Indexes.GENRES: self.convert_to_tiered_index(1, 0, Indexes.GENRES)
         }
