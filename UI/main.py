@@ -1,7 +1,15 @@
 import streamlit as st
 import sys
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/indexer')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR')
 
-sys.path.append("../")
+
+
+
+
+# sys.path.append("../")
 from Logic import utils
 import time
 from enum import Enum
@@ -9,7 +17,7 @@ import random
 from Logic.core.snippet import Snippet
 
 snippet_obj = Snippet(
-    number_of_words_on_each_side=5
+    number_of_words_on_each_side=3
 )  # You can change this parameter, if needed.
 
 
@@ -26,13 +34,16 @@ class color(Enum):
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
     snippet, not_exist_words = snippet_obj.find_snippet(summary, query)
+    # print('SNIPPET:-------------------------------------------------------------------------')
+    # print(snippet)
+    # print('------------------------------------')
     if "***" in snippet:
         snippet = snippet.split()
         for i in range(len(snippet)):
             current_word = snippet[i]
             if current_word.startswith("***") and current_word.endswith("***"):
                 current_word_without_star = current_word[3:-3]
-                summary = summary.lower().replace(
+                summary = summary.replace(
                     current_word_without_star,
                     f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
                 )
@@ -51,8 +62,20 @@ def search_handling(
     search_method,
 ):
     if search_button:
-        corrected_query = utils.correct_text(search_term, utils.movies_dataset)
+        all_documents = []
+        for movie in utils.movies_dataset.values():
+            all_documents.append(movie["title"])
+            all_documents.extend(movie["stars"])
+            all_documents.extend(movie["genres"])
+            all_documents.extend(movie["directors"])
+            all_documents.extend(movie["summaries"])
+            all_documents.extend(movie["writers"])
+            all_documents.extend(movie["synopsis"])
+            # for review in movie["reviews"]:
+                # all_documents.append(review[0])
 
+        corrected_query = utils.correct_text(search_term, all_documents)
+        
         if corrected_query != search_term:
             st.warning(f"Your search terms were corrected to: {corrected_query}")
             search_term = corrected_query
@@ -77,6 +100,9 @@ def search_handling(
             for i in range(len(result)):
                 card = st.columns([3, 1])
                 info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
+                fps = info['first_page_summary']
+                if len(fps) > 20 and fps[1:].rfind(fps[:20]) != -1:
+                    info['first_page_summary'] = fps[fps[1:].rfind(fps[:20])+1:]
                 with card[0].container():
                     st.title(info["title"])
                     st.markdown(f"[Link to movie]({info['URL']})")
