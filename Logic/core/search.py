@@ -19,7 +19,7 @@ class SearchEngine:
         Initializes the search engine.
 
         """
-        path = 'index/'
+        path = '/Users/sina/Sem-5/MIR/Project/MIR/index/'
         self.document_indexes = {
             Indexes.STARS: Index_reader(path, Indexes.STARS).index,
             Indexes.GENRES: Index_reader(path, Indexes.GENRES).index,
@@ -178,6 +178,7 @@ class SearchEngine:
 
         for field in weights:
             #TODO
+            print(self.document_indexes.keys())
             scorer = Scorer(self.document_indexes[field], number_of_documents)
             if method == 'OkapiBM25':
                 average_document_field_length = self.metadata_index['averge_document_length'][field.value]
