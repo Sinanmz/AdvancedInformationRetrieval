@@ -8,9 +8,10 @@ class SpellCorrection:
         all_documents : list of str
             The input documents.
         """
+        all_documents = [document.lower() for document in all_documents]
         self.all_shingled_words, self.word_counter = self.shingling_and_counting(all_documents)
 
-    def shingle_word(self, word, k=2):
+    def shingle_word(self, word, k=3):
         """
         Convert a word into a set of shingles.
 
@@ -130,12 +131,24 @@ class SpellCorrection:
         
         # TODO: Do spell correction here.
         for word in query.split():
-            
+            word = word.lower()
             top5_candidates = self.find_nearest_words(word)
             top5_tfs = [self.word_counter[candidate] for candidate in top5_candidates]
             normalized_tfs = [tf / max(top5_tfs) for tf in top5_tfs]
             jaccard_scores = [self.jaccard_score(self.shingle_word(word), self.all_shingled_words[candidate]) for candidate in top5_candidates]
             scores = [normalized_tfs[i] * jaccard_scores[i] for i in range(5)]
             final_result += top5_candidates[scores.index(max(scores))] + " "
-        
-        return final_result
+
+        final_result = final_result[:-1]
+
+        for i, word in enumerate(query.split()):
+            if word[0].isupper():
+                final_result = final_result.split()
+                final_result[i] = final_result[i].capitalize()
+                final_result = ' '.join(final_result)
+            if word.isupper():
+                final_result = final_result.split()
+                final_result[i] = final_result[i].upper()
+                final_result = ' '.join(final_result)
+            
+        return final_result 
