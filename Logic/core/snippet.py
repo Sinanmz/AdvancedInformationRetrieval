@@ -66,18 +66,10 @@ class Snippet:
         query = query.split()
         occurances_dict = {query_word:[] for query_word in query}
 
-        for i in range(len(doc)):
-            if doc[i] in query or doc[i].lower() in query or doc[i].upper() in query or doc[i].capitalize() in query:
-                try:
-                    occurances_dict[doc[i]].append(i)
-                except:
-                    try:
-                        occurances_dict[doc[i].lower()].append(i)
-                    except:
-                        try:
-                            occurances_dict[doc[i].upper()].append(i)
-                        except:
-                            occurances_dict[doc[i].capitalize()].append(i)
+        for query_word in query:
+            for i in range(len(doc)):
+                if query_word.lower() in doc[i].lower():
+                    occurances_dict[query_word].append(i)
                 
 
         for query_word in query:
@@ -97,13 +89,23 @@ class Snippet:
             else:
                 occurance_groups[-1].append(occurance)
         
+        taken = {query_w: False for query_w in query}
+
         for occurance_group in occurance_groups:
             start = max(0, occurance_group[0] - self.number_of_words_on_each_side)
             end = min(len(doc), occurance_group[-1] + self.number_of_words_on_each_side + 1)
             snippet = ' '.join(doc[start:end])
             for occurance in occurance_group:
-                query_w = doc[occurance]
-                snippet = snippet.replace(query_w, f'***{query_w}***')
+                for q_w, occurance_w in occurances_dict.items():
+                    if occurance in occurance_w:
+                        query_w = q_w
+                        break
+                if taken[query_w]:
+                    continue
+                index = doc[occurance].lower().find(query_w.lower())
+                replacement = doc[occurance][index:index+len(query_w)]
+                snippet = snippet.replace(replacement, f' ***{replacement}*** ')
+                taken[query_w] = True
             final_snippet += snippet + ' ... '
 
         return final_snippet, not_exist_words
