@@ -132,6 +132,9 @@ class SpellCorrection:
         # TODO: Do spell correction here.
         for word in query.split():
             word = word.lower()
+            if len(word) < 3 or word.isnumeric():
+                final_result += word + " "
+                continue
             top5_candidates = self.find_nearest_words(word)
             top5_tfs = [self.word_counter[candidate] for candidate in top5_candidates]
             normalized_tfs = [tf / max(top5_tfs) for tf in top5_tfs]
