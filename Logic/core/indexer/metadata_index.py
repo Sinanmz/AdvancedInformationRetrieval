@@ -57,7 +57,9 @@ class Metadata_index:
         current_count = 0
         for key, value in self.documents.items():
             text = value[where]
-            length = len(text)
+            length = 0
+            for val in text:
+                length += len(val.split())
             current_count += length
 
         return current_count / len(self.documents)

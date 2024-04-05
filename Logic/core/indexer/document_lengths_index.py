@@ -43,9 +43,11 @@ class DocumentLengthsIndex:
         # TODO:
         current_index = {}
         for key, value in self.documents_index.items():
+            length = 0
             id = key
-            text = value[where]
-            length = len(text)
+            values = value[where]
+            for v in values:
+                length += len(v.split())
             current_index[id] = length
         return current_index
     
