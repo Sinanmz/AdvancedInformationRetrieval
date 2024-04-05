@@ -66,7 +66,9 @@ class Scorer:
         idf = self.idf.get(term, None)
         if idf is None:
             # TODO
-            pass
+            # pass
+            df = len(self.index.get(term, {}))
+            idf = np.log((self.N)/(df+1))
         return idf
     
     def get_query_tfs(self, query):
@@ -85,6 +87,13 @@ class Scorer:
         """
         
         #TODO
+        query_tfs = {}
+        for term in query:
+            if term not in query_tfs:
+                query_tfs[term] = 1
+            else:
+                query_tfs[term] += 1
+        return query_tfs
 
 
     def compute_scores_with_vector_space_model(self, query, method):
@@ -105,7 +114,20 @@ class Scorer:
         """
 
         # TODO
-        pass
+        # pass
+        query_method = method.split('.')[0]
+        document_method = method.split('.')[1]
+        query_tfs = self.get_query_tfs(query)
+
+        doc_list = self.get_list_of_documents(query)
+        # print(doc_list)
+
+        scores = {}
+        for doc_id in doc_list:
+            scores[doc_id] = self.get_vector_space_model_score(query, query_tfs, doc_id, document_method, query_method)
+
+        return scores
+
 
     def get_vector_space_model_score(self, query, query_tfs, document_id, document_method, query_method):
         """
@@ -131,7 +153,50 @@ class Scorer:
         """
 
         #TODO
-        pass
+        # pass
+        query_vector = query_tfs
+
+        if query_method[0] == 'l':
+            for term, tf in query_vector.items():
+                query_vector[term] = np.log(1+tf)
+        if query_method[1] == 't':
+            for term, tf in query_vector.items():
+                query_vector[term] /= self.get_idf(term)
+        if query_method[2] == 'c':
+            norm = np.sqrt(sum([tf**2 for tf in query_vector.values()]))
+            for term in query_vector:
+                query_vector[term] /= norm
+        
+        doc_vector = {}
+        for term in query:
+            if term in self.index.keys():
+                if document_id in self.index[term].keys():
+                    doc_vector[term] = self.index[term][document_id]
+                else:
+                    doc_vector[term] = 0
+            else:
+                doc_vector[term] = 0
+
+        if document_method[0] == 'l':
+            for term, tf in doc_vector.items():
+                doc_vector[term] = np.log(1+tf)
+        if document_method[1] == 't':
+            for term, tf in doc_vector.items():
+                doc_vector[term] /= self.get_idf(term)
+        if document_method[2] == 'c':
+            norm = np.sqrt(sum([tf**2 for tf in doc_vector.values()]))
+            if norm != 0:
+                for term in doc_vector:
+                    doc_vector[term] /= norm
+        
+        score = 0.0
+        for term in query_vector:
+            score += query_vector[term]*doc_vector[term]
+        
+        return score
+
+
+
 
     def compute_socres_with_okapi_bm25(self, query, average_document_field_length, document_lengths):
         """
@@ -154,7 +219,15 @@ class Scorer:
         """
 
         # TODO
-        pass
+        # pass
+        doc_list = self.get_list_of_documents(query)
+
+        scores = {}
+        for doc_id in doc_list:
+            scores[doc_id] = self.get_okapi_bm25_score(query, doc_id, average_document_field_length, document_lengths)
+
+        return scores
+
 
     def get_okapi_bm25_score(self, query, document_id, average_document_field_length, document_lengths):
         """
@@ -179,4 +252,20 @@ class Scorer:
         """
 
         # TODO
-        pass
+        # pass
+
+        k1 = 1.5  # Free parameter
+        b = 0.75  # Free parameter
+
+        score = 0.0
+        document_length = document_lengths.get(document_id, 0)
+        
+        for term in query:
+            idf = self.get_idf(term)
+            tf = self.index.get(term, {}).get(document_id, 0)
+
+            numerator = tf * (k1 + 1)
+            denominator = tf + k1 * (1 - b + b * (document_length / average_document_field_length))
+            score += idf * (numerator / denominator)
+        
+        return score

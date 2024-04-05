@@ -1,10 +1,17 @@
 import json
 import numpy as np
-from .preprocess import Preprocessor
-from .scorer import Scorer
-from .indexes_enum import Indexes, Index_types
-from .index_reader import Index_reader
+import os
+import sys
 
+
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/indexer')
+sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core')
+from preprocess import Preprocessor
+from scorer import Scorer
+# from indexer.indexes_enum import Indexes, Index_types
+# from indexer.index_reader import Index_reader
+from indexes_enum import Indexes, Index_types
+from index_reader import Index_reader
 
 class SearchEngine:
     def __init__(self):
@@ -12,23 +19,24 @@ class SearchEngine:
         Initializes the search engine.
 
         """
-        path = '/index'
+        path = 'index/'
         self.document_indexes = {
-            Indexes.STARS: Index_reader(path, Indexes.STARS),
-            Indexes.GENRES: Index_reader(path, Indexes.GENRES),
-            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES)
+            Indexes.STARS: Index_reader(path, Indexes.STARS).index,
+            Indexes.GENRES: Index_reader(path, Indexes.GENRES).index,
+            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES).index
         }
         self.tiered_index = {
-            Indexes.STARS: Index_reader(path, Indexes.STARS, Index_types.TIERED),
-            Indexes.GENRES: Index_reader(path, Indexes.GENRES, Index_types.TIERED),
-            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES, Index_types.TIERED)
+            Indexes.STARS: Index_reader(path, Indexes.STARS, Index_types.TIERED).index,
+            Indexes.GENRES: Index_reader(path, Indexes.GENRES, Index_types.TIERED).index,
+            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES, Index_types.TIERED).index
         }
         self.document_lengths_index = {
-            Indexes.STARS: Index_reader(path, Indexes.STARS, Index_types.DOCUMENT_LENGTH),
-            Indexes.GENRES: Index_reader(path, Indexes.GENRES, Index_types.DOCUMENT_LENGTH),
-            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES, Index_types.DOCUMENT_LENGTH)
+            Indexes.STARS: Index_reader(path, Indexes.STARS, Index_types.DOCUMENT_LENGTH).index,
+            Indexes.GENRES: Index_reader(path, Indexes.GENRES, Index_types.DOCUMENT_LENGTH).index,
+            Indexes.SUMMARIES: Index_reader(path, Indexes.SUMMARIES, Index_types.DOCUMENT_LENGTH).index
         }
-        self.metadata_index = Index_reader(path, Indexes.DOCUMENTS, Index_types.METADATA)
+        self.metadata_index = Index_reader(path, Indexes.DOCUMENTS, Index_types.METADATA).index
+
 
     def search(self, query, method, weights, safe_ranking = True, max_results=10):
         """
@@ -87,7 +95,17 @@ class SearchEngine:
             The final scores of the documents.
         """
         # TODO
-        pass
+        # pass
+        all_doc_ids = set()
+        for field in scores:
+            all_doc_ids = all_doc_ids.union(set(scores[field].keys()))
+
+        for field in weights:
+            for doc_id in all_doc_ids:
+                if doc_id not in final_scores:
+                    final_scores[doc_id] = 0
+                if doc_id in scores[field]:
+                    final_scores[doc_id] += weights[field] * scores[field].get(doc_id, 0)
 
     def find_scores_with_unsafe_ranking(self, query, method, weights, max_results, scores):
         """
@@ -106,10 +124,39 @@ class SearchEngine:
         scores : dict
             The scores of the documents.
         """
-        for field in weights:
-            for tier in ["first_tier", "second_tier", "third_tier"]:
+        number_of_documents = self.metadata_index['document_count']
+        idf = {}
+        for term in query:
+            if term not in idf:
+                df = len(self.document_indexes.get(term, {}))
+                idf[term] = np.log((number_of_documents)/(df+1))
+
+        
+        for tier in ["first_tier", "second_tier", "third_tier"]:
+            for field in weights:
                 #TODO
-                pass
+                # pass
+                scorer = Scorer(self.tiered_index[field][tier], number_of_documents)
+                scorer.idf = idf
+                if method == 'OkapiBM25':
+                    average_document_field_length = self.metadata_index['averge_document_length'][field.value]
+                    document_lengths = self.document_lengths_index[field]
+
+                    temp_scores = scorer.compute_socres_with_okapi_bm25(query, average_document_field_length, document_lengths)
+                else:
+                    temp_scores = scorer.compute_scores_with_vector_space_model(query, method)
+                
+                if field not in scores:
+                    scores[field] = temp_scores
+                else:
+                    for doc_id in temp_scores:
+                        scores[field][doc_id] = temp_scores[doc_id]
+
+            retrieved = set()
+            for field in weights:
+                retrieved = retrieved.union(set(scores[field].keys()))
+            if len(retrieved) >= max_results:
+                break
 
     def find_scores_with_safe_ranking(self, query, method, weights, scores):
         """
@@ -127,9 +174,21 @@ class SearchEngine:
             The scores of the documents.
         """
 
+        number_of_documents = self.metadata_index['document_count']
+
         for field in weights:
             #TODO
-            pass
+            scorer = Scorer(self.document_indexes[field], number_of_documents)
+            if method == 'OkapiBM25':
+                average_document_field_length = self.metadata_index['averge_document_length'][field.value]
+                document_lengths = self.document_lengths_index[field]
+
+                scores[field] = scorer.compute_socres_with_okapi_bm25(query, average_document_field_length, document_lengths)
+            else:
+                scores[field] = scorer.compute_scores_with_vector_space_model(query, method)
+        
+        
+
 
     def merge_scores(self, scores1, scores2):
         """
@@ -149,17 +208,29 @@ class SearchEngine:
         """
 
         #TODO
+        final_scores = {}
+        for doc_id in scores1:
+            final_scores[doc_id] = scores1[doc_id] + scores2[doc_id]
+        return final_scores
 
 
 if __name__ == '__main__':
     search_engine = SearchEngine()
-    query = "spider man in wonderland"
-    method = "lnc.ltc"
+    query = "Christoph waltz"
+    method = 'OkapiBM25'
     weights = {
-        Indexes.STARS: 1,
+        Indexes.STARS: 2,
         Indexes.GENRES: 1,
         Indexes.SUMMARIES: 1
     }
-    result = search_engine.search(query, method, weights)
+    result = search_engine.search(query, method, weights, safe_ranking=True, max_results=10)
 
     print(result)
+
+    with open('/Users/sina/Sem-5/MIR/Project/MIR/data/IMDB_Crawled.json') as file:
+        data = json.load(file)
+    for i in result:
+        for movie in data:
+            if movie['id'] == i[0]:
+                print(movie['title'])
+                break
