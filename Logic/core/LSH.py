@@ -59,7 +59,7 @@ class MinHashLSH:
         """
 
         shingles = list(self.all_shingles)
-        shingles.sort()
+        # shingles.sort()
         matrix = np.zeros((len(shingles), len(self.documents)))
 
         for i, shingle in enumerate(shingles):
@@ -72,8 +72,7 @@ class MinHashLSH:
 
     def _make_hash_function(self, seed):
         def hash_func(x):
-            random.seed(x + seed)
-            return random.randint(0, 2**16 - 1)
+            return hash(f"{seed}_{x}")
         return hash_func
 
 
@@ -91,14 +90,13 @@ class MinHashLSH:
 
         for doc_idx, shingles in self.doc_shingles.items():
             for i, hash_func in enumerate(self.hash_functions):
-                for shingle in shingles:
-                    hash_value = hash_func(hash(shingle))
-                    signature_matrix[i, doc_idx] = min(signature_matrix[i, doc_idx], hash_value)
-            
+                min_hash = min(hash_func(shingle) for shingle in shingles)
+                signature_matrix[i, doc_idx] = min_hash
+
         return signature_matrix
 
         
-    def lsh_buckets(self, signature, bands=10, rows_per_band=10):
+    def lsh_buckets(self, signature, bands=20, rows_per_band=25):
         """
         Group documents into Locality-Sensitive Hashing (LSH) buckets based on Min-Hash signatures.
 
@@ -124,19 +122,13 @@ class MinHashLSH:
                 start_row = band * rows_per_band
                 end_row = start_row + rows_per_band
                 sub_signature = tuple(signature[start_row:end_row, doc_idx])
-
                 hash_id = hash(sub_signature)
-                bucket_id = int(str(hash_id) + str(band))
-
-                if bucket_id not in buckets:
-                    buckets[bucket_id] = [doc_idx]
-                else:
-                    buckets[bucket_id].append(doc_idx)
-
+                bucket_id = f"{hash_id}_{band}"
+                buckets.setdefault(bucket_id, []).append(doc_idx)
         return buckets
     
 
-    def perform_lsh(self):
+    def perform_lsh(self, bands=10, rows_per_band=40):
         """
         Perform the entire Locality-Sensitive Hashing (LSH) process.
 
@@ -146,7 +138,7 @@ class MinHashLSH:
             A dictionary mapping bucket IDs to lists of document indices.
         """
         signature = self.min_hash_signature()
-        buckets = self.lsh_buckets(signature)
+        buckets = self.lsh_buckets(signature, bands, rows_per_band)
         return buckets
 
     def jaccard_score(self, first_set, second_set):
@@ -165,10 +157,9 @@ class MinHashLSH:
         float
             Jaccard score.
         """
-        union = len(first_set.union(second_set))
-        intersection = len(first_set.intersection(second_set))
-        jaccard_score = intersection / union
-        return jaccard_score
+        intersection = len(first_set & second_set)
+        union = len(first_set | second_set)
+        return intersection / union
 
     def jaccard_similarity_test(self, buckets, all_documents):
         """
@@ -231,27 +222,43 @@ if __name__ == '__main__':
         temp = doc['summaries']
         summary = ''
         for t in temp:
-            summary += t
+            summary += ' ' + t
         summaris.append(summary)
 
-    num_hashes = 100
-    min_hash_lsh = MinHashLSH(summaris, num_hashes)
-    buckets = min_hash_lsh.perform_lsh()
+    docs = []
+    with open('data/IMDB_Crawled.json') as f:
+        docs = json.load(f)
+    
+    for doc in docs:
+        temp = doc['summaries']
+        summary = ''
+        for t in temp:
+            summary += ' ' + t
+        if summary == '':
+            continue
+        summaris.append(summary)
+    
 
-    printed_buckets = []
+    num_hashes = 625
+    min_hash_lsh = MinHashLSH(summaris, num_hashes)
+    buckets = min_hash_lsh.perform_lsh(bands=25, rows_per_band=25)
+
+    print_buckets = []
     print("Buckets:")
     for bucket_id, bucket in buckets.items():
-        if len(bucket) > 1 and bucket not in printed_buckets:
-            print(bucket, end=' ')
-            printed_buckets.append(bucket)
+        if len(bucket) > 1 and bucket not in print_buckets:
+            print_buckets.append(bucket)
+    
+    print_buckets.sort(key=lambda x: x[0])
+    for bucket in print_buckets:
+        print(bucket, end=' ')
     print()
+
     min_hash_lsh.jaccard_similarity_test(buckets, summaris)
 
 
     # Outputs:
-    
+
     # Buckets:
-    # [0, 1] [6, 7] [14, 15] [18, 19] [8, 9] [12, 13] [16, 17] [2, 3] [4, 5] [10, 11] [10, 11, 14] 
-    # your final score in near duplicate detection: 0.9459459459459459
-        
-        
+    # [0, 1] [2, 3] [10, 11] [14, 15] [16, 17] [18, 19] [99, 548] [250, 382] [481, 1604] [598, 1482] [1224, 2199] [1252, 2149] [1847, 2040] 
+    # your final score in near duplicate detection: 0.95
