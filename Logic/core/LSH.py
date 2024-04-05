@@ -217,3 +217,41 @@ class MinHashLSH:
 
         # a good score is around 0.8
         print("your final score in near duplicate detection:", correct_near_duplicates / all_near_duplicates)
+
+
+import json
+
+if __name__ == '__main__':
+    docs = []
+    with open('Logic/core/LSHFakeData.json') as f:
+        docs = json.load(f)
+
+    summaris = []
+    for doc in docs:
+        temp = doc['summaries']
+        summary = ''
+        for t in temp:
+            summary += t
+        summaris.append(summary)
+
+    num_hashes = 100
+    min_hash_lsh = MinHashLSH(summaris, num_hashes)
+    buckets = min_hash_lsh.perform_lsh()
+
+    printed_buckets = []
+    print("Buckets:")
+    for bucket_id, bucket in buckets.items():
+        if len(bucket) > 1 and bucket not in printed_buckets:
+            print(bucket, end=' ')
+            printed_buckets.append(bucket)
+    print()
+    min_hash_lsh.jaccard_similarity_test(buckets, summaris)
+
+
+    # Outputs:
+    
+    # Buckets:
+    # [0, 1] [6, 7] [14, 15] [18, 19] [8, 9] [12, 13] [16, 17] [2, 3] [4, 5] [10, 11] [10, 11, 14] 
+    # your final score in near duplicate detection: 0.9459459459459459
+        
+        
