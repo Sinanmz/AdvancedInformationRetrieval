@@ -1,21 +1,31 @@
 import re
+import nltk
+import contractions
+import unidecode
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+import json
+
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('stopwords')
 
 class Preprocessor:
 
-    def __init__(self, documents: list, stopwords_path):
+    def __init__(self, documents: list):
         """
         Initialize the class.
 
         Parameters
         ----------
         documents : list
-            The list of documents to be preprocessed, path to stop words, or other parameters.
+            The list of documents to be preprocessed.
         """
-        # TODO
         self.documents = documents
-        with open(stopwords_path, 'r') as f:
-            self.stopwords = f.read().split('\n')
-        
+        self.stopwords = set(stopwords.words('english'))
+        self.lemmatizer = WordNetLemmatizer()
+
     def preprocess(self):
         """
         Preprocess the text using the methods in the class.
@@ -25,20 +35,36 @@ class Preprocessor:
         List[str]
             The preprocessed documents.
         """
-        # TODO
         preprocessed_docs = []
         for doc in self.documents:
+            doc = self.expand_contractions(doc)
             doc = self.normalize(doc)
             doc = self.remove_links(doc)
             doc = self.remove_punctuations(doc)
             words = self.tokenize(doc)
-            words = self.remove_stopwords(' '.join(words))
+            words = self.remove_stopwords(words)
             preprocessed_docs.append(' '.join(words))
         return preprocessed_docs
 
+    def expand_contractions(self, text: str):
+        """
+        Expand contractions in the text.
+
+        Parameters
+        ----------
+        text : str
+            The text to be processed.
+
+        Returns
+        ----------
+        str
+            The text with contractions expanded.
+        """
+        return contractions.fix(text)
+
     def normalize(self, text: str):
         """
-        Normalize the text by converting it to a lower case, stemming, lemmatization, etc.
+        Normalize the text by converting it to lower case and using lemmatization.
 
         Parameters
         ----------
@@ -50,8 +76,11 @@ class Preprocessor:
         str
             The normalized text.
         """
-        # TODO
-        return text.lower()
+        text = text.lower()
+        text = unidecode.unidecode(text)
+        words = word_tokenize(text)
+        normalized_text = ' '.join([self.lemmatizer.lemmatize(word) for word in words])
+        return normalized_text
 
     def remove_links(self, text: str):
         """
@@ -68,7 +97,6 @@ class Preprocessor:
             The text with links removed.
         """
         patterns = [r'\S*http\S*', r'\S*www\S*', r'\S+\.ir\S*', r'\S+\.com\S*', r'\S+\.org\S*', r'\S*@\S*']
-        # TODO
         for pattern in patterns:
             text = re.sub(pattern, '', text)
         return text
@@ -87,7 +115,6 @@ class Preprocessor:
         str
             The text with punctuations removed.
         """
-        # TODO
         text = re.sub(r'[^\w\s]', '', text)
         return text
 
@@ -105,27 +132,59 @@ class Preprocessor:
         list
             The list of words.
         """
-        # TODO
-        return text.split()
+        return word_tokenize(text)
 
-    def remove_stopwords(self, text: str):
+    def remove_stopwords(self, words: list):
         """
-        Remove stopwords from the text.
+        Remove stopwords from the list of words.
 
         Parameters
         ----------
-        text : str
-            The text to remove stopwords from.
+        words : list
+            The list of words to remove stopwords from.
 
         Returns
         ----------
         list
             The list of words with stopwords removed.
         """
-        # TODO
-        words = text.split()
         return [word for word in words if word not in self.stopwords]
-        
+    
+
+if __name__ == '__main__':
+    data_path = 'data/IMDB_Crawled.json'
+    with open(data_path, 'r') as file:
+        data = json.load(file)
+    preprocessed_docs = []
+    for doc in data:
+        id = doc['id']
+
+        stars = doc['stars']
+        preprocessed_stars = []
+        for star in stars:
+            for term in star.split():
+                preprocessed_stars.append(term.lower())
+
+        genres = doc['genres']
+        preprocessed_genres = []
+        for genre in genres:
+            for term in genre.split():
+                preprocessed_genres.append(term.lower())
+
+        summaries = doc['summaries']
+        preprocessor = Preprocessor(summaries)
+        preprocessed_sumaries = preprocessor.preprocess()
+
+        preprocessed_docs.append({
+            'id': id,
+            'stars': preprocessed_stars,
+            'genres': preprocessed_genres,
+            'summaries': preprocessed_sumaries
+        })
+    with open('data/IMDB_Preprocessed.json', 'w') as file:
+        json.dump(preprocessed_docs, file)
 
 
 
+    
+    
