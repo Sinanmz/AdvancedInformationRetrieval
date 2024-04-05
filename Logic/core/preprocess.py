@@ -160,16 +160,12 @@ if __name__ == '__main__':
         id = doc['id']
 
         stars = doc['stars']
-        preprocessed_stars = []
-        for star in stars:
-            for term in star.split():
-                preprocessed_stars.append(term.lower())
+        preprocessor = Preprocessor(stars)
+        preprocessed_stars = preprocessor.preprocess()
 
         genres = doc['genres']
-        preprocessed_genres = []
-        for genre in genres:
-            for term in genre.split():
-                preprocessed_genres.append(term.lower())
+        preprocessor = Preprocessor(genres)
+        preprocessed_genres = preprocessor.preprocess()
 
         summaries = doc['summaries']
         preprocessor = Preprocessor(summaries)

@@ -56,11 +56,12 @@ class Index:
             for star in document['stars']:
                 if star == 'N/A':
                     continue
-                if star not in stars_index:
-                    stars_index[star] = {}
-                if document['id'] not in stars_index[star]:
-                    stars_index[star][document['id']] = 0
-                stars_index[star][document['id']] += 1
+                for word in star.split():
+                    if word not in stars_index:
+                        stars_index[word] = {}
+                    if document['id'] not in stars_index[word]:
+                        stars_index[word][document['id']] = 0
+                    stars_index[word][document['id']] += 1
         
         return stars_index
 
@@ -81,11 +82,12 @@ class Index:
             for genre in document['genres']:
                 if genre == 'N/A':
                     continue
-                if genre not in genres_index:
-                    genres_index[genre] = {}
-                if document['id'] not in genres_index[genre]:
-                    genres_index[genre][document['id']] = 0
-                genres_index[genre][document['id']] += 1
+                for word in genre.split():
+                    if word not in genres_index:
+                        genres_index[word] = {}
+                    if document['id'] not in genres_index[word]:
+                        genres_index[word][document['id']] = 0
+                    genres_index[word][document['id']] += 1
 
         return genres_index
 
@@ -433,26 +435,26 @@ if __name__ == '__main__':
     # Cheking if index loaded correctly (summaries):
     # True
     # Cheking if indexing is good (documents):
-    # Brute force time:  8.511543273925781e-05
-    # Implemented time:  6.9141387939453125e-06
+    # Brute force time:  8.988380432128906e-05
+    # Implemented time:  5.245208740234375e-06
     # Indexing is correct
     # Indexing is good
     # True
     # Cheking if indexing is good (stars):
-    # Brute force time:  0.0014829635620117188
-    # Implemented time:  3.0994415283203125e-06
+    # Brute force time:  0.0013611316680908203
+    # Implemented time:  2.86102294921875e-06
     # Indexing is correct
     # Indexing is good
     # True
     # Cheking if indexing is good (genres):
-    # Brute force time:  0.0007259845733642578
+    # Brute force time:  0.0007009506225585938
     # Implemented time:  9.5367431640625e-07
     # Indexing is correct
     # Indexing is good
     # True
     # Cheking if indexing is good (summaries):
-    # Brute force time:  5.5789947509765625e-05
-    # Implemented time:  4.0531158447265625e-06
+    # Brute force time:  5.888938903808594e-05
+    # Implemented time:  5.245208740234375e-06
     # Indexing is correct
     # Indexing is good
     # True

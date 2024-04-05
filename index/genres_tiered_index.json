@@ -3639,7 +3639,7 @@
             "tt9032400": 1,
             "tt10234724": 1
         },
-        "sci-fi": {
+        "scifi": {
             "tt1375666": 1,
             "tt0816692": 1,
             "tt0133093": 1,
@@ -5941,7 +5941,7 @@
             "tt0454507": 1,
             "tt0056778": 1
         },
-        "film-noir": {
+        "filmnoir": {
             "tt0043014": 1,
             "tt0036775": 1,
             "tt0041959": 1,
@@ -6316,13 +6316,13 @@
             "tt14425962": 1,
             "tt13623148": 1
         },
-        "reality-tv": {
+        "realitytv": {
             "tt1942995": 1
         },
         "news": {
             "tt12313750": 1
         },
-        "talk-show": {
+        "talkshow": {
             "tt3265918": 1,
             "tt3566828": 1
         }
@@ -6337,7 +6337,7 @@
         "romance": {},
         "western": {},
         "fantasy": {},
-        "sci-fi": {},
+        "scifi": {},
         "mystery": {},
         "family": {},
         "comedy": {},
@@ -6346,14 +6346,14 @@
         "animation": {},
         "horror": {},
         "music": {},
-        "film-noir": {},
+        "filmnoir": {},
         "musical": {},
         "sport": {},
         "documentary": {},
         "short": {},
-        "reality-tv": {},
+        "realitytv": {},
         "news": {},
-        "talk-show": {}
+        "talkshow": {}
     },
     "third_tier": {
         "crime": {},
@@ -6365,7 +6365,7 @@
         "romance": {},
         "western": {},
         "fantasy": {},
-        "sci-fi": {},
+        "scifi": {},
         "mystery": {},
         "family": {},
         "comedy": {},
@@ -6374,13 +6374,13 @@
         "animation": {},
         "horror": {},
         "music": {},
-        "film-noir": {},
+        "filmnoir": {},
         "musical": {},
         "sport": {},
         "documentary": {},
         "short": {},
-        "reality-tv": {},
+        "realitytv": {},
         "news": {},
-        "talk-show": {}
+        "talkshow": {}
     }
 }
