@@ -41,6 +41,13 @@ class DocumentLengthsIndex:
         """
 
         # TODO:
+        current_index = {}
+        for key, value in self.documents_index.items():
+            id = key
+            text = value[where]
+            length = len(text)
+            current_index[id] = length
+        return current_index
     
     def store_document_lengths_index(self, path , index_name):
         """

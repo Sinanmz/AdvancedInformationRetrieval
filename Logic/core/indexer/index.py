@@ -280,7 +280,11 @@ class Index:
             raise ValueError('Invalid index name')
 
         # TODO
-        pass
+        # pass
+        absolute_path = os.path.join(path, index_name + '_index.json')
+        with open(absolute_path, 'w') as f:
+            json.dump(self.index[index_name], f)
+        
 
     def load_index(self, path: str):
         """
@@ -295,7 +299,7 @@ class Index:
         # TODO
         # pass
         for index_type in self.index:
-            with open(os.path.join(path, index_type + '.json'), 'r') as f:
+            with open(os.path.join(path, index_type + '_index.json'), 'r') as f:
                 self.index[index_type] = json.load(f)
 
     def check_if_index_loaded_correctly(self, index_type: str, loaded_index: dict):
@@ -343,7 +347,7 @@ class Index:
                 continue
 
             for field in document[index_type]:
-                if check_word in field:
+                if check_word in field.split():
                     docs.append(document['id'])
                     break
 
@@ -379,4 +383,80 @@ class Index:
             return False
 
 # TODO: Run the class with needed parameters, then run check methods and finally report the results of check 
+
+
+if __name__ == '__main__':
+    prepreprocessed_documents_path = 'data/IMDB_Preprocessed.json'
+    with open(prepreprocessed_documents_path, 'r') as f:
+        preprocessed_documents = json.load(f)
+    
+    index = Index(preprocessed_documents)
+
+    print("Cheking add/remove:")
+    index.check_add_remove_is_correct()
+
+    index.store_index('index', Indexes.DOCUMENTS.value)
+    index.store_index('index', Indexes.STARS.value)
+    index.store_index('index', Indexes.GENRES.value)
+    index.store_index('index', Indexes.SUMMARIES.value)
+
+    index.load_index('index')
+    print("Cheking if index loaded correctly (documents):")
+    print(index.check_if_index_loaded_correctly(Indexes.DOCUMENTS.value, index.index[Indexes.DOCUMENTS.value]))
+    print("Cheking if index loaded correctly (stars):")
+    print(index.check_if_index_loaded_correctly(Indexes.STARS.value, index.index[Indexes.STARS.value]))
+    print("Cheking if index loaded correctly (genres):")
+    print(index.check_if_index_loaded_correctly(Indexes.GENRES.value, index.index[Indexes.GENRES.value]))
+    print("Cheking if index loaded correctly (summaries):")
+    print(index.check_if_index_loaded_correctly(Indexes.SUMMARIES.value, index.index[Indexes.SUMMARIES.value]))
+
+    print("Cheking if indexing is good (documents):")
+    print(index.check_if_indexing_is_good(Indexes.DOCUMENTS.value))
+    print("Cheking if indexing is good (stars):")
+    print(index.check_if_indexing_is_good(Indexes.STARS.value))
+    print("Cheking if indexing is good (genres):")
+    print(index.check_if_indexing_is_good(Indexes.GENRES.value))
+    print("Cheking if indexing is good (summaries):")
+    print(index.check_if_indexing_is_good(Indexes.SUMMARIES.value))
+
+    # Outputs:
+    
+    # Cheking add/remove:
+    # Add is correct
+    # Remove is correct
+    # Cheking if index loaded correctly (documents):
+    # True
+    # Cheking if index loaded correctly (stars):
+    # True
+    # Cheking if index loaded correctly (genres):
+    # True
+    # Cheking if index loaded correctly (summaries):
+    # True
+    # Cheking if indexing is good (documents):
+    # Brute force time:  8.511543273925781e-05
+    # Implemented time:  6.9141387939453125e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Cheking if indexing is good (stars):
+    # Brute force time:  0.0014829635620117188
+    # Implemented time:  3.0994415283203125e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Cheking if indexing is good (genres):
+    # Brute force time:  0.0007259845733642578
+    # Implemented time:  9.5367431640625e-07
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Cheking if indexing is good (summaries):
+    # Brute force time:  5.5789947509765625e-05
+    # Implemented time:  4.0531158447265625e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+
+
+
 

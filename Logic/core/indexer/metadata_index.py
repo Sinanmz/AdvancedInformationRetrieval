@@ -15,6 +15,9 @@ class Metadata_index:
         
         #TODO
         self.path = path
+        self.read_documents()
+        self.metadata_index = self.create_metadata_index()
+        self.store_metadata_index(path)
 
     def read_documents(self):
         """
@@ -23,8 +26,8 @@ class Metadata_index:
         """
 
         #TODO
-        index_reader = Index_reader(self.path, Indexes.DOCUMENTS, Index_types.DATA)
-        self.documents = index_reader.get_index()
+        self.documents = Index_reader(self.path, index_name=Indexes.DOCUMENTS).index
+
 
     def create_metadata_index(self):    
         """
@@ -51,11 +54,13 @@ class Metadata_index:
         """
 
         #TODO
-        total_length = 0
-        for document in self.documents:
-            total_length += len(document[where])
-            
-        return total_length / len(self.documents)
+        current_count = 0
+        for key, value in self.documents.items():
+            text = value[where]
+            length = len(text)
+            current_count += length
+
+        return current_count / len(self.documents)
 
     def store_metadata_index(self, path):
         """

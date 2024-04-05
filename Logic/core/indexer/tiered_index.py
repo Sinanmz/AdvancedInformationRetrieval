@@ -1,5 +1,5 @@
-from .indexes_enum import Indexes, Index_types
-from .index_reader import Index_reader
+from indexes_enum import Indexes, Index_types
+from index_reader import Index_reader
 import json
 
 
@@ -62,6 +62,18 @@ class Tiered_index:
         second_tier = {}
         third_tier = {}
         #TODO
+        for key, value in current_index.items():
+            first_tier[key] = {}
+            second_tier[key] = {}
+            third_tier[key] = {}
+            for doc_id, tf in value.items():
+                if tf >= first_tier_threshold:
+                    first_tier[key][doc_id] = tf
+                elif tf >= second_tier_threshold:
+                    second_tier[key][doc_id] = tf
+                else:
+                    third_tier[key][doc_id] = tf
+                
         return {
             "first_tier": first_tier,
             "second_tier": second_tier,
