@@ -257,8 +257,7 @@ if __name__ == '__main__':
 
     num_hashes = 625
     min_hash_lsh = MinHashLSH(summaries, num_hashes)
-    buckets = min_hash_lsh.perform_lsh(bands=25, rows_per_band=25)
-    print(buckets)
+    buckets = min_hash_lsh.perform_lsh()
 
     print_buckets = []
     print("Buckets:")
@@ -282,5 +281,15 @@ if __name__ == '__main__':
     # Outputs:
 
     # Buckets:
-    # [0, 1] [2, 3] [10, 11] [14, 15] [16, 17] [18, 19] [99, 548] [250, 382] [481, 1604] [598, 1482] [1224, 2199] [1252, 2149] [1847, 2040] 
-    # your final score in near duplicate detection: 0.95
+    # Buckets:
+    # Bucket 1:       test1(index=0) - test2(index=1) 
+    # Bucket 2:       test7(index=6) - test8(index=7) 
+    # Bucket 3:       test13(index=12) - test14(index=13) 
+    # Bucket 4:       test15(index=14) - test16(index=15) 
+    # Bucket 5:       test17(index=16) - test18(index=17) 
+    # Bucket 6:       test19(index=18) - test20(index=19) 
+    # Bucket 7:       Apocalypse Now(index=75) - The Post(index=1273) 
+    # Bucket 8:       M(index=120) - Wild Strawberries(index=221) 
+    # Bucket 9:       Opening Night(index=791) - The Aura(index=1484) 
+    # Bucket 10:      The Batman Part II(index=1252) - We Live in Time(index=2149) 
+    # Bucket 11:      The Hunchback of Notre Dame(index=2118) - Return to Oz(index=2330)

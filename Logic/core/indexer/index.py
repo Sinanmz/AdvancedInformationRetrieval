@@ -407,68 +407,121 @@ if __name__ == '__main__':
     print("Cheking add/remove:")
     index.check_add_remove_is_correct()
 
-    index.store_index('index', Indexes.DOCUMENTS.value)
-    index.store_index('index', Indexes.STARS.value)
-    index.store_index('index', Indexes.GENRES.value)
-    index.store_index('index', Indexes.SUMMARIES.value)
-
+    index.store_index(project_root+'/index', Indexes.DOCUMENTS.value)
+    index.store_index(project_root+'/index', Indexes.STARS.value)
+    index.store_index(project_root+'/index', Indexes.GENRES.value)
+    index.store_index(project_root+'/index', Indexes.SUMMARIES.value)
     index.load_index('index')
-    print("Cheking if index loaded correctly (documents):")
-    print(index.check_if_index_loaded_correctly(Indexes.DOCUMENTS.value, index.index[Indexes.DOCUMENTS.value]))
-    print("Cheking if index loaded correctly (stars):")
-    print(index.check_if_index_loaded_correctly(Indexes.STARS.value, index.index[Indexes.STARS.value]))
-    print("Cheking if index loaded correctly (genres):")
-    print(index.check_if_index_loaded_correctly(Indexes.GENRES.value, index.index[Indexes.GENRES.value]))
-    print("Cheking if index loaded correctly (summaries):")
-    print(index.check_if_index_loaded_correctly(Indexes.SUMMARIES.value, index.index[Indexes.SUMMARIES.value]))
 
-    print("Cheking if indexing is good (documents):")
-    print(index.check_if_indexing_is_good(Indexes.DOCUMENTS.value))
-    print("Cheking if indexing is good (stars):")
-    print(index.check_if_indexing_is_good(Indexes.STARS.value))
-    print("Cheking if indexing is good (genres):")
-    print(index.check_if_indexing_is_good(Indexes.GENRES.value))
-    print("Cheking if indexing is good (summaries):")
-    print(index.check_if_indexing_is_good(Indexes.SUMMARIES.value))
+    print("Checking if index loaded correctly (documents):")
+    print(index.check_if_index_loaded_correctly(
+        Indexes.DOCUMENTS.value, 
+        index.index[Indexes.DOCUMENTS.value]))
+    
+    print("Checking if index loaded correctly (stars):")
+    print(index.check_if_index_loaded_correctly(
+        Indexes.STARS.value, 
+        index.index[Indexes.STARS.value]))
+    
+    print("Checking if index loaded correctly (genres):")
+    print(index.check_if_index_loaded_correctly(
+        Indexes.GENRES.value, 
+        index.index[Indexes.GENRES.value]))
+    
+    print("Checking if index loaded correctly (summaries):")
+    print(index.check_if_index_loaded_correctly(
+        Indexes.SUMMARIES.value, 
+        index.index[Indexes.SUMMARIES.value]))
+
+    print("Checking if indexing is good (documents):")
+    print('Word: tt1160419')
+    print(index.check_if_indexing_is_good(Indexes.DOCUMENTS.value, 'hello'))
+    print('Word: tt15239678')
+    print(index.check_if_indexing_is_good(Indexes.DOCUMENTS.value, 'word'))
+
+    print("Checking if indexing is good (stars):")
+    print('Word: ben')
+    print(index.check_if_indexing_is_good(Indexes.STARS.value, 'ben'))
+    print('Word: bob')
+    print(index.check_if_indexing_is_good(Indexes.STARS.value, 'bob'))
+
+    print("Checking if indexing is good (genres):")
+    print('Word: drama')
+    print(index.check_if_indexing_is_good(Indexes.GENRES.value, 'drama'))
+    print('Word: comedy')
+    print(index.check_if_indexing_is_good(Indexes.GENRES.value, 'comedy'))
+
+    print("Checking if indexing is good (summaries):")
+    print('Word: murder')
+    print(index.check_if_indexing_is_good(Indexes.SUMMARIES.value, 'murder'))
+    print('Word: happy')
+    print(index.check_if_indexing_is_good(Indexes.SUMMARIES.value, 'happy'))
 
     # Outputs:
-    
-    # Cheking add/remove:
-    # Add is correct
-    # Remove is correct
-    # Cheking if index loaded correctly (documents):
-    # True
-    # Cheking if index loaded correctly (stars):
-    # True
-    # Cheking if index loaded correctly (genres):
-    # True
-    # Cheking if index loaded correctly (summaries):
-    # True
-    # Cheking if indexing is good (documents):
-    # Brute force time:  8.988380432128906e-05
-    # Implemented time:  5.245208740234375e-06
-    # Indexing is correct
-    # Indexing is good
-    # True
-    # Cheking if indexing is good (stars):
-    # Brute force time:  0.0013611316680908203
-    # Implemented time:  2.86102294921875e-06
-    # Indexing is correct
-    # Indexing is good
-    # True
-    # Cheking if indexing is good (genres):
-    # Brute force time:  0.0007009506225585938
-    # Implemented time:  9.5367431640625e-07
-    # Indexing is correct
-    # Indexing is good
-    # True
-    # Cheking if indexing is good (summaries):
-    # Brute force time:  5.888938903808594e-05
-    # Implemented time:  5.245208740234375e-06
-    # Indexing is correct
-    # Indexing is good
-    # True
-
+   
+#     Cheking add/remove:
+#     Add is correct
+#     Remove is correct
+#     Checking if index loaded correctly (documents):
+#     True
+#     Checking if index loaded correctly (stars):
+#     True
+#     Checking if index loaded correctly (genres):
+#     True
+#     Checking if index loaded correctly (summaries):
+#     True
+#     Checking if indexing is good (documents):
+#     Word: tt1160419
+#     Brute force time:  6.985664367675781e-05
+#     Implemented time:  1.0967254638671875e-05
+#     Indexing is correct
+#     Indexing is good
+#     True
+#     Word: tt15239678
+#     Brute force time:  6.127357482910156e-05
+#     Implemented time:  1.1920928955078125e-06
+#     Indexing is correct
+#     Indexing is good
+#     True
+#     Checking if indexing is good (stars):
+#     Word: ben
+#     Brute force time:  4.887580871582031e-05
+#     Implemented time:  2.1457672119140625e-06
+#     Indexing is correct
+#     Indexing is good
+#     True
+#     Word: bob
+#     Brute force time:  0.00031304359436035156
+#     Implemented time:  3.814697265625e-06
+#     Indexing is correct
+#     Indexing is good
+#     True
+#     Checking if indexing is good (genres):
+#     Word: drama
+#     Brute force time:  1.6689300537109375e-06
+#     Implemented time:  8.344650268554688e-06
+#     Indexing is correct
+#     Indexing is bad
+#     False
+#     Word: comedy
+#     Brute force time:  1.0967254638671875e-05
+#     Implemented time:  4.76837158203125e-06
+#     Indexing is correct
+#     Indexing is good
+#     True
+#     Checking if indexing is good (summaries):
+#     Word: murder
+#     Brute force time:  7.605552673339844e-05
+#     Implemented time:  2.1457672119140625e-06
+#     Indexing is correct
+#     Indexing is good
+#     True
+#     Word: happy
+#     Brute force time:  0.0007660388946533203
+#     Implemented time:  3.0994415283203125e-06
+#     Indexing is correct
+#     Indexing is good
+#     True
 
 
 
