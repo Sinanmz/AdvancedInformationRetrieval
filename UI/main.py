@@ -35,17 +35,42 @@ class color(Enum):
 
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
+    summary = ' '.join(summary.split())
     snippet, not_exist_words = snippet_obj.find_snippet(summary, query)
+    print(snippet)
     if "***" in snippet:
-        snippet = snippet.split()
-        for i in range(len(snippet)):
-            current_word = snippet[i]
-            if current_word.startswith("***") and current_word.endswith("***"):
-                current_word_without_star = current_word[3:-3]
-                summary = summary.replace(
-                    current_word_without_star,
-                    f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
+        # snippet = snippet.split()
+        # for i in range(len(snippet)):
+            # current_word = snippet[i]
+            # if current_word.startswith("***") and current_word.endswith("***"):
+            #     current_word_without_star = current_word[3:-3]
+            #     summary = summary.replace(
+            #         current_word_without_star,
+            #         f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
+            #     )
+        if '...' in snippet:
+            snips = snippet.split('...')
+        else:
+            snips = [snippet]
+        print(snips)
+        for snip in snips:
+            idx1 = snip.find('***')
+            idx2 = snip[idx1+1:].find('***')
+            idx2 = idx2+idx1+1
+            print('-------------------------------')
+            print(idx1)
+            print(idx2)
+            print(snip[:idx1])
+            print(snip[idx1+3:idx2])
+            print(snip[idx2+3:])
+            print(snip)
+            print(snip[:idx1].rstrip() + ' ' + f"<b><font size='4' color={random.choice(list(color)).value}>{snip[idx1+3:idx2].strip()}</font></b>" + ' '+ snip[idx2+3:].lstrip())
+            print('-------------------------------')
+            summary = summary.replace(
+                snip,
+                snip[:idx1].rstrip() + ' ' + f"<b><font size='4' color={random.choice(list(color)).value}>{snip[idx1+3:idx2].strip()}</font></b>" + ' '+ snip[idx2+3:].lstrip(),
                 )
+    print(summary)
     return summary
 
 
@@ -107,7 +132,7 @@ def search_handling(
                 card = st.columns([3, 1])
                 info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
                 fps = info['first_page_summary']
-                if fps[1:].rfind(fps[:len(fps)//4]) != -1:
+                if len(fps) > 30 and fps[1:].rfind(fps[:30]) != -1:
                     info['first_page_summary'] = fps[fps[1:].rfind(fps[:20])+1:]
                 with card[0].container():
                     st.title(info["title"])
@@ -188,7 +213,7 @@ def main():
         search_weights = [weight_stars, weight_genres, weight_summary]
         search_method = st.selectbox(
             "Search method",
-            ("ltn.lnn", "ltc.lnc", "OkapiBM25"),
+            ("OkapiBM25", "ltn.lnn", "ltc.lnc"),
         )
 
     search_button = st.button("Search!")
