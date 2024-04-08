@@ -16,7 +16,7 @@ import json
 
 
 class Tiered_index:
-    def __init__(self, path="index/"):
+    def __init__(self, path=project_root+"/index/"):
         """
         Initializes the Tiered_index.
 

@@ -15,7 +15,7 @@ from typing import Dict, List
 import json
 
 
-data_path = '/Users/sina/Sem-5/MIR/Project/MIR/data/IMDB_Crawled.json'
+data_path = project_root + '/data/IMDB_Crawled.json'
 with open(data_path, 'r') as f:
     data = json.load(f)
 

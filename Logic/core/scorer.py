@@ -130,7 +130,6 @@ class Scorer:
         query_tfs = self.get_query_tfs(query)
 
         doc_list = self.get_list_of_documents(query)
-        # print(doc_list)
 
         scores = {}
         for doc_id in doc_list:
@@ -177,8 +176,6 @@ class Scorer:
             for term in query_vector:
                 query_vector[term] /= norm
         
-        # print("QUERY VECTOR:", query_tfs)
-
         
         doc_vector = {}
         for term in query:
@@ -201,19 +198,12 @@ class Scorer:
                 for term in doc_vector:
                     doc_vector[term] /= norm
         
-        # print("DOC VECTOR", doc_vector)
-
         
         score = 0.0
         for term in query_vector:
             score += query_vector[term]*doc_vector[term]
-        
-        # print("SCORE:", score)
-        
+                
         return score
-
-
-
 
     def compute_socres_with_okapi_bm25(self, query, average_document_field_length, document_lengths):
         """

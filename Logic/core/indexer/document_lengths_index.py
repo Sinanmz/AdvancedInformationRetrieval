@@ -15,7 +15,7 @@ import json
 
 
 class DocumentLengthsIndex:
-    def __init__(self,path='index/'):
+    def __init__(self,path=project_root+'/index/'):
         """
         Initializes the DocumentLengthsIndex class.
 

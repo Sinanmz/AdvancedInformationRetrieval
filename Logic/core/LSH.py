@@ -10,6 +10,8 @@ if project_root not in sys.path:
 import numpy as np
 import itertools
 import random
+import json
+
 
 
 
@@ -107,7 +109,7 @@ class MinHashLSH:
         return signature_matrix
 
         
-    def lsh_buckets(self, signature, bands=20, rows_per_band=25):
+    def lsh_buckets(self, signature, bands=25, rows_per_band=25):
         """
         Group documents into Locality-Sensitive Hashing (LSH) buckets based on Min-Hash signatures.
 
@@ -139,7 +141,7 @@ class MinHashLSH:
         return buckets
     
 
-    def perform_lsh(self, bands=10, rows_per_band=40):
+    def perform_lsh(self, bands=25, rows_per_band=25):
         """
         Perform the entire Locality-Sensitive Hashing (LSH) process.
 
@@ -168,9 +170,10 @@ class MinHashLSH:
         float
             Jaccard score.
         """
-        intersection = len(first_set & second_set)
-        union = len(first_set | second_set)
-        return intersection / union
+        intersection = first_set.intersection(second_set)
+        union = first_set.union(second_set)
+        jaccard_score = len(intersection) / len(union) if len(union) > 0 else 0
+        return jaccard_score
 
     def jaccard_similarity_test(self, buckets, all_documents):
         """
@@ -221,23 +224,24 @@ class MinHashLSH:
         print("your final score in near duplicate detection:", correct_near_duplicates / all_near_duplicates)
 
 
-import json
 
 if __name__ == '__main__':
     docs = []
-    with open('Logic/core/LSHFakeData.json') as f:
+    title_to_id = {}
+    with open(project_root+'/Logic/core/LSHFakeData.json') as f:
         docs = json.load(f)
 
-    summaris = []
+    summaries = []
     for doc in docs:
         temp = doc['summaries']
         summary = ''
         for t in temp:
             summary += ' ' + t
-        summaris.append(summary)
+        summaries.append(summary)
+        title_to_id[len(summaries) - 1] = doc['title']
 
     docs = []
-    with open('data/IMDB_Crawled.json') as f:
+    with open(project_root+'/data/IMDB_Crawled.json') as f:
         docs = json.load(f)
     
     for doc in docs:
@@ -247,11 +251,12 @@ if __name__ == '__main__':
             summary += ' ' + t
         if summary == '':
             continue
-        summaris.append(summary)
+        summaries.append(summary)
+        title_to_id[len(summaries) - 1] = doc['title']
     
 
     num_hashes = 625
-    min_hash_lsh = MinHashLSH(summaris, num_hashes)
+    min_hash_lsh = MinHashLSH(summaries, num_hashes)
     buckets = min_hash_lsh.perform_lsh(bands=25, rows_per_band=25)
 
     print_buckets = []
@@ -261,11 +266,16 @@ if __name__ == '__main__':
             print_buckets.append(bucket)
     
     print_buckets.sort(key=lambda x: x[0])
-    for bucket in print_buckets:
-        print(bucket, end=' ')
-    print()
+    for i, bucket in enumerate(print_buckets):
+        print(f"Bucket {i+1}:\t", end='')
+        for j, doc_idx in enumerate(bucket):
+            print(f'{title_to_id[doc_idx]}(index={doc_idx})', end=' ')
+            if j != len(bucket) - 1:
+                print('- ', end='')
+        print()
+        
 
-    min_hash_lsh.jaccard_similarity_test(buckets, summaris)
+    min_hash_lsh.jaccard_similarity_test(buckets, summaries)
 
 
     # Outputs:

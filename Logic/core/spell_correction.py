@@ -142,9 +142,6 @@ class SpellCorrection:
         # TODO: Do spell correction here.
         for word in query.split():
             word = word.lower()
-            # if len(word) < 3 or word.isnumeric():
-            #     final_result += word + " "
-            #     continue
             if word.isnumeric():
                 final_result += word + " "
                 continue

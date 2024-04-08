@@ -107,7 +107,7 @@ def search_handling(
                 card = st.columns([3, 1])
                 info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
                 fps = info['first_page_summary']
-                if len(fps) > 20 and fps[1:].rfind(fps[:20]) != -1:
+                if fps[1:].rfind(fps[:len(fps)//4]) != -1:
                     info['first_page_summary'] = fps[fps[1:].rfind(fps[:20])+1:]
                 with card[0].container():
                     st.title(info["title"])

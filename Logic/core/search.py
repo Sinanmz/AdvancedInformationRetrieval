@@ -22,7 +22,7 @@ class SearchEngine:
         Initializes the search engine.
 
         """
-        path = '/Users/sina/Sem-5/MIR/Project/MIR/index/'
+        path = project_root+'/index/'
         self.document_indexes = {
             Indexes.STARS: Index_reader(path, Indexes.STARS).index,
             Indexes.GENRES: Index_reader(path, Indexes.GENRES).index,
@@ -218,21 +218,36 @@ class SearchEngine:
 
 if __name__ == '__main__':
     search_engine = SearchEngine()
-    query = "Christoph waltz"
-    method = 'OkapiBM25'
+    query = "spider man in wonderland"
+    method = "OkapiBM25"
     weights = {
-        Indexes.STARS: 2,
+        Indexes.STARS: 1,
         Indexes.GENRES: 1,
         Indexes.SUMMARIES: 1
     }
-    result = search_engine.search(query, method, weights, safe_ranking=True, max_results=10)
+    result = search_engine.search(query, method, weights)
 
     print(result)
 
-    with open('/Users/sina/Sem-5/MIR/Project/MIR/data/IMDB_Crawled.json') as file:
+    with open(project_root+'/data/IMDB_Crawled.json') as file:
         data = json.load(file)
     for i in result:
         for movie in data:
             if movie['id'] == i[0]:
                 print(movie['title'])
                 break
+
+    
+    # Outputs:
+            
+    # [('tt0043274', 10.591902749552874), ('tt0145487', 9.265701388588703), ('tt0050613', 9.149541788983864), ('tt9362722', 8.379617332419956), ('tt1535108', 7.852809886615105), ('tt0316654', 7.655373639122422), ('tt0948470', 6.721467194212693), ('tt0245429', 5.936760338124282), ('tt1205489', 5.816980309065059), ('tt11097384', 5.5724942510569075)]
+    # Alice in Wonderland
+    # Spider-Man
+    # Throne of Blood
+    # Spider-Man: Across the Spider-Verse
+    # Elysium
+    # Spider-Man 2
+    # The Amazing Spider-Man
+    # Spirited Away
+    # Gran Torino
+    # Spaceman

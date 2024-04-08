@@ -176,7 +176,8 @@ class Snippet:
             snippet = ' '.join(doc[start:end])
             for occurance in occurance_group:
                 query_w = doc[occurance]
-                snippet = snippet.replace(query_w, f'***{query_w}***')
+                query_w = re.sub(r'[^\w\s]', '', query_w)
+                snippet = snippet.replace(query_w, f' ***{query_w}*** ')
             final_snippet += snippet + ' ... '
 
         return final_snippet, not_exist_words

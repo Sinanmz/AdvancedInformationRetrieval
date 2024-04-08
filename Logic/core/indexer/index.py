@@ -398,7 +398,7 @@ class Index:
 
 
 if __name__ == '__main__':
-    prepreprocessed_documents_path = 'data/IMDB_Preprocessed.json'
+    prepreprocessed_documents_path = project_root+'/data/IMDB_Preprocessed.json'
     with open(prepreprocessed_documents_path, 'r') as f:
         preprocessed_documents = json.load(f)
     

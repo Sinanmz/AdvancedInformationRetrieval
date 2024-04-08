@@ -149,7 +149,7 @@ class Preprocessor:
     
 
 if __name__ == '__main__':
-    data_path = 'data/IMDB_Crawled.json'
+    data_path = project_root+'/data/IMDB_Crawled.json'
     with open(data_path, 'r') as file:
         data = json.load(file)
     preprocessed_docs = []
@@ -174,7 +174,7 @@ if __name__ == '__main__':
             'genres': preprocessed_genres,
             'summaries': preprocessed_sumaries
         })
-    with open('data/IMDB_Preprocessed.json', 'w') as file:
+    with open(project_root+'/data/IMDB_Preprocessed.json', 'w') as file:
         json.dump(preprocessed_docs, file)
 
 
