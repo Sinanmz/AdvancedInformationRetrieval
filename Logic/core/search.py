@@ -41,6 +41,65 @@ class SearchEngine:
         self.metadata_index = Index_reader(path, Indexes.DOCUMENTS, Index_types.METADATA).index
 
 
+
+        number_of_documents = self.metadata_index['document_count']
+        self.idf = {}
+        all_terms = {
+            Indexes.STARS: set(),
+            Indexes.GENRES: set(),
+            Indexes.SUMMARIES: set()
+        }
+
+        for field in self.document_indexes:
+            for term in self.document_indexes[field]:
+                all_terms[field].add(term)
+        
+        self.idf = {
+            Indexes.STARS: {},
+            Indexes.GENRES: {},
+            Indexes.SUMMARIES: {}
+        }
+
+        for field in all_terms:
+            for term in all_terms[field]:
+                df = len(self.document_indexes[field].get(term, {}))
+                if df == 0:
+                    self.idf[field][term] = 0
+                else:
+                    self.idf[field][term] = np.log((number_of_documents)/(df))
+
+
+        self.normalization_factors_idf = {
+            Indexes.STARS: {},
+            Indexes.GENRES: {},
+            Indexes.SUMMARIES: {}
+        }
+
+        self.normalization_factors_no_idf = {
+            Indexes.STARS: {},
+            Indexes.GENRES: {},
+            Indexes.SUMMARIES: {}
+        }
+
+
+        for field in [Indexes.STARS, Indexes.GENRES, Indexes.SUMMARIES]:
+            for term in self.document_indexes[field]:
+                for doc_id in self.document_indexes[field][term]:
+                    if doc_id not in self.normalization_factors_no_idf[field]:
+                        self.normalization_factors_no_idf[field][doc_id] = 0
+                    self.normalization_factors_no_idf[field][doc_id] += self.document_indexes[field][term][doc_id] ** 2
+                    if doc_id not in self.normalization_factors_idf[field]:
+                        self.normalization_factors_idf[field][doc_id] = 0
+                    self.normalization_factors_idf[field][doc_id] += (self.document_indexes[field][term][doc_id] * self.idf[field].get(term, 0)) ** 2
+        
+        for field in [Indexes.STARS, Indexes.GENRES, Indexes.SUMMARIES]:
+            for doc_id in self.normalization_factors_no_idf[field]:
+                self.normalization_factors_no_idf[field][doc_id] = np.sqrt(self.normalization_factors_no_idf[field][doc_id])
+            for doc_id in self.normalization_factors_idf[field]:
+                self.normalization_factors_idf[field][doc_id] = np.sqrt(self.normalization_factors_idf[field][doc_id])
+
+
+
     def search(self, query, method, weights, safe_ranking = True, max_results=10):
         """
         searches for the query in the indexes.
@@ -128,19 +187,20 @@ class SearchEngine:
             The scores of the documents.
         """
         number_of_documents = self.metadata_index['document_count']
-        idf = {}
-        for term in query:
-            if term not in idf:
-                df = len(self.document_indexes.get(term, {}))
-                idf[term] = np.log((number_of_documents)/(df+1))
-
         
         for tier in ["first_tier", "second_tier", "third_tier"]:
             for field in weights:
                 #TODO
                 # pass
                 scorer = Scorer(self.tiered_index[field][tier], number_of_documents)
-                scorer.idf = idf
+                scorer.idf = self.idf[field]
+
+                if method != 'OkapiBM25':
+                    if method[5] == 't':
+                        scorer.normalization_factor = self.normalization_factors_idf[field]
+                    else:
+                        scorer.normalization_factor = self.normalization_factors_no_idf[field]
+                        
                 if method == 'OkapiBM25':
                     average_document_field_length = self.metadata_index['averge_document_length'][field.value]
                     document_lengths = self.document_lengths_index[field]
@@ -149,15 +209,27 @@ class SearchEngine:
                 else:
                     temp_scores = scorer.compute_scores_with_vector_space_model(query, method)
                 
+        
                 if field not in scores:
                     scores[field] = temp_scores
                 else:
                     for doc_id in temp_scores:
-                        scores[field][doc_id] = temp_scores[doc_id]
+                        if doc_id not in scores[field]:
+                            scores[field][doc_id] = 0
+                        scores[field][doc_id] += temp_scores[doc_id]
+            
+            aggregated_scores = {}
+            for field in weights:
+                for doc_id in scores[field]:
+                    if doc_id not in aggregated_scores:
+                        aggregated_scores[doc_id] = 0
+                    aggregated_scores[doc_id] += scores[field][doc_id]
 
             retrieved = set()
-            for field in weights:
-                retrieved = retrieved.union(set(scores[field].keys()))
+            for doc_id in aggregated_scores:
+                if aggregated_scores[doc_id] != 0.0:
+                    retrieved.add(doc_id)
+
             if len(retrieved) >= max_results:
                 break
 
@@ -182,6 +254,12 @@ class SearchEngine:
         for field in weights:
             #TODO
             scorer = Scorer(self.document_indexes[field], number_of_documents)
+            scorer.idf = self.idf[field]
+            if method != 'OkapiBM25':
+                if method[5] == 't':
+                    scorer.normalization_factor = self.normalization_factors_idf[field]
+                else:
+                    scorer.normalization_factor = self.normalization_factors_no_idf[field]
             if method == 'OkapiBM25':
                 average_document_field_length = self.metadata_index['averge_document_length'][field.value]
                 document_lengths = self.document_lengths_index[field]
@@ -218,14 +296,15 @@ class SearchEngine:
 
 if __name__ == '__main__':
     search_engine = SearchEngine()
-    query = "spider man in wonderland"
-    method = "OkapiBM25"
+    # query = "spider man in wonderland"
+    query = "razor gang"
+    method = "lnc.ltc"
     weights = {
         Indexes.STARS: 1,
         Indexes.GENRES: 1,
         Indexes.SUMMARIES: 1
     }
-    result = search_engine.search(query, method, weights)
+    result = search_engine.search(query, method, weights, max_results=10, safe_ranking=True)
 
     print(result)
 

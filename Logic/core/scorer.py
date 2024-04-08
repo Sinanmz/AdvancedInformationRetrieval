@@ -26,6 +26,7 @@ class Scorer:
         self.index = index
         self.idf = {}
         self.N = number_of_documents
+        self.normalization_factor = {}
 
     def get_list_of_documents(self,query):
         """
@@ -170,11 +171,12 @@ class Scorer:
                 query_vector[term] = np.log(1+tf)
         if query_method[1] == 't':
             for term, tf in query_vector.items():
-                query_vector[term] /= self.get_idf(term)
+                query_vector[term] *= self.get_idf(term)
         if query_method[2] == 'c':
             norm = np.sqrt(sum([tf**2 for tf in query_vector.values()]))
-            for term in query_vector:
-                query_vector[term] /= norm
+            if norm != 0:
+                for term in query_vector:
+                    query_vector[term] /= norm
         
         
         doc_vector = {}
@@ -191,9 +193,9 @@ class Scorer:
                 doc_vector[term] = np.log(1+tf)
         if document_method[1] == 't':
             for term, tf in doc_vector.items():
-                doc_vector[term] /= self.get_idf(term)
+                doc_vector[term] *= self.get_idf(term)
         if document_method[2] == 'c':
-            norm = np.sqrt(sum([tf**2 for tf in doc_vector.values()]))
+            norm = self.normalization_factor.get(document_id, 0)
             if norm != 0:
                 for term in doc_vector:
                     doc_vector[term] /= norm
