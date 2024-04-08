@@ -28,10 +28,8 @@ for movie in data:
             'writers': movie['writers'], 'synopsis': movie['synopsis'],
             'reviews': movie['reviews'], 
             }
-    
 
     movies_dataset[movie['id']] = temp
-          
 search_engine = SearchEngine()
 
 

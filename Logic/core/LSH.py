@@ -258,6 +258,7 @@ if __name__ == '__main__':
     num_hashes = 625
     min_hash_lsh = MinHashLSH(summaries, num_hashes)
     buckets = min_hash_lsh.perform_lsh(bands=25, rows_per_band=25)
+    print(buckets)
 
     print_buckets = []
     print("Buckets:")
