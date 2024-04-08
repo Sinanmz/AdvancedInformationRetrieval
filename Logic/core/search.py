@@ -297,7 +297,7 @@ class SearchEngine:
 if __name__ == '__main__':
     search_engine = SearchEngine()
     # query = "spider man in wonderland"
-    query = "razor gang"
+    query = "javad"
     method = "lnc.ltc"
     weights = {
         Indexes.STARS: 1,

@@ -72,8 +72,7 @@ class Snippet:
 
         # TODO: Extract snippet and the tokens which are not present in the doc.
 
-        ##### My personal comment: The code below performs better at highlighting the query words in the snippet.
-        ##### But it is not how it was instructed in the project description.
+        ##### My comment: The code below highlights every query word also taking into account the capitalization and uppercasing.
         #-------------------------------------------------------------------------------------------
         # doc = doc.split()
         # query = self.remove_stop_words_from_query(query)
@@ -132,52 +131,108 @@ class Snippet:
         #     final_snippet += snippet + ' ... '
         #-------------------------------------------------------------------------------------------
 
-
+        ##### My comment: The code below highloghts best occurance of aquery word also taking into account the capitalization and uppercasing.
+        #-------------------------------------------------------------------------------------------
         doc = doc.split()
         query = self.remove_stop_words_from_query(query)
         query = query.split()
-        occurances_dict = {query_word:[] for query_word in query}
+        occurances_dict = {query_word:{} for query_word in query}
 
         for i in range(len(doc)):
             temp = re.sub(r'[^\w\s]', '', doc[i])
             if temp in query or temp.lower() in query or temp.upper() in query or temp.capitalize() in query:
                 try:
-                    occurances_dict[temp].append(i)
+                    occurances_dict[temp][i] = 0
                 except:
                     try:
-                        occurances_dict[temp.lower()].append(i)
+                        occurances_dict[temp.lower()][i] = 0
                     except:
                         try:
-                            occurances_dict[temp.upper()].append(i)
+                            occurances_dict[temp.upper()][i] = 0
                         except:
-                            occurances_dict[temp.capitalize()].append(i)
-                
+                            occurances_dict[temp.capitalize()][i] = 0
 
         for query_word in query:
             if len(occurances_dict[query_word]) == 0:
                 not_exist_words.append(query_word)
-                
-        all_occurances = []
-        for query_word in query:
-            all_occurances += occurances_dict[query_word]
-        all_occurances.sort()
 
-        occurance_groups = []
+        for query_word in occurances_dict:
+            for i in occurances_dict[query_word]:
+                for other_query_word in occurances_dict:
+                    if other_query_word != query_word:
+                        for j in occurances_dict[other_query_word]:
+                            if abs(i-j) <= self.number_of_words_on_each_side:
+                                occurances_dict[query_word][i] += 1
 
-        for occurance in all_occurances:
-            if len(occurance_groups) == 0 or occurance - occurance_groups[-1][-1] > 1 + 2 * self.number_of_words_on_each_side:
-                occurance_groups.append([occurance])
-            else:
-                occurance_groups[-1].append(occurance)
-        
-        for occurance_group in occurance_groups:
-            start = max(0, occurance_group[0] - self.number_of_words_on_each_side)
-            end = min(len(doc), occurance_group[-1] + self.number_of_words_on_each_side + 1)
+
+        best_occurrences = {query_word:None for query_word in occurances_dict if query_word not in not_exist_words}
+
+        for query_word in occurances_dict:
+            for i in occurances_dict[query_word]:
+                if best_occurrences[query_word] == None or occurances_dict[query_word][i] > occurances_dict[query_word][best_occurrences[query_word]]:
+                    best_occurrences[query_word] = i
+    
+
+        for query_word, occurance in best_occurrences.items():
+            start = max(0, occurance - self.number_of_words_on_each_side)
+            end = min(len(doc), occurance + self.number_of_words_on_each_side + 1)
             snippet = ' '.join(doc[start:end])
-            for occurance in occurance_group:
-                query_w = doc[occurance]
-                query_w = re.sub(r'[^\w\s]', '', query_w)
-                snippet = snippet.replace(query_w, f' ***{query_w}*** ')
+            query_w = doc[occurance]
+            query_w = re.sub(r'[^\w\s]', '', query_w)
+            snippet = snippet.replace(query_w, f'***{query_w}***')
             final_snippet += snippet + ' ... '
+
+        print(final_snippet[:-5])
+        final_snippet = final_snippet[:-5]
+        #-------------------------------------------------------------------------------------------
+        
+
+
+        ##### My comment: The code below highloghts best occurance of a query word assuming everything is lowercased(as it was apparantly intended :|).
+        #-------------------------------------------------------------------------------------------
+        # doc = doc.split()
+        # query = self.remove_stop_words_from_query(query)
+        # query = query.split()
+        # query = [word.lower() for word in query]
+        # occurances_dict = {query_word:{} for query_word in query}
+
+        # for i in range(len(doc)):
+        #     temp = re.sub(r'()",', '', doc[i])
+        #     if temp in query:
+        #         occurances_dict[temp][i] = 0
+
+        # for query_word in query:
+        #     if len(occurances_dict[query_word]) == 0:
+        #         not_exist_words.append(query_word)
+
+
+        # for query_word in occurances_dict:
+        #     for i in occurances_dict[query_word]:
+        #         for other_query_word in occurances_dict:
+        #             if other_query_word != query_word:
+        #                 for j in occurances_dict[other_query_word]:
+        #                     if abs(i-j) <= self.number_of_words_on_each_side:
+        #                         occurances_dict[query_word][i] += 1
+
+
+        # best_occurrences = {query_word:None for query_word in occurances_dict if query_word not in not_exist_words}
+
+        # for query_word in occurances_dict:
+        #     for i in occurances_dict[query_word]:
+        #         if best_occurrences[query_word] == None or occurances_dict[query_word][i] > occurances_dict[query_word][best_occurrences[query_word]]:
+        #             best_occurrences[query_word] = i
+    
+
+        # for query_word, occurance in best_occurrences.items():
+        #     start = max(0, occurance - self.number_of_words_on_each_side)
+        #     end = min(len(doc), occurance + self.number_of_words_on_each_side + 1)
+        #     snippet = ' '.join(doc[start:end])
+        #     query_w = doc[occurance]
+        #     query_w = re.sub(r'[^\w\s]', '', query_w)
+        #     snippet = snippet.replace(query_w, f' ***{query_w}*** ')
+        #     final_snippet += snippet + ' ... '
+        #-------------------------------------------------------------------------------------------
+
+        
 
         return final_snippet, not_exist_words
