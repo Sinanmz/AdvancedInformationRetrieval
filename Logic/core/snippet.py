@@ -1,9 +1,19 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+core_dir = os.path.dirname(current_script_path)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import re
 import nltk
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-import json
+
+nltk.download('stopwords')
+
+
 class Snippet:
     def __init__(self, number_of_words_on_each_side=5):
         """
@@ -62,10 +72,9 @@ class Snippet:
 
         # TODO: Extract snippet and the tokens which are not present in the doc.
 
-
         ##### My personal comment: The code below performs better at highlighting the query words in the snippet.
         ##### But it is not how it was instructed in the project description.
-
+        #-------------------------------------------------------------------------------------------
         # doc = doc.split()
         # query = self.remove_stop_words_from_query(query)
         # query = query.split()
@@ -121,6 +130,7 @@ class Snippet:
 
         #         taken[query_w] = True
         #     final_snippet += snippet + ' ... '
+        #-------------------------------------------------------------------------------------------
 
 
         doc = doc.split()

@@ -1,21 +1,18 @@
+import os
 import sys
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/indexer')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR')
-from search import SearchEngine
-from spell_correction import SpellCorrection
-from snippet import Snippet
-from indexes_enum import Indexes, Index_types
+current_script_path = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_script_path)
+project_root = os.path.dirname(current_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
+from Logic.core.search import SearchEngine
+from Logic.core.spell_correction import SpellCorrection
+from Logic.core.snippet import Snippet
+from Logic.core.indexer.indexes_enum import Indexes, Index_types
 
 from typing import Dict, List
-# from core.search import SearchEngine
-# from core.spell_correction import SpellCorrection
-# from core.snippet import Snippet
-# from core.indexer.indexes_enum import Indexes, Index_types
 import json
-
 
 
 data_path = '/Users/sina/Sem-5/MIR/Project/MIR/data/IMDB_Crawled.json'

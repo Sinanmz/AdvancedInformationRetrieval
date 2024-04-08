@@ -1,3 +1,12 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+utility_dir = os.path.dirname(current_script_path)
+core_dir = os.path.dirname(utility_dir)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
 from typing import List
 
@@ -25,7 +34,10 @@ class Evaluation:
         precision = 0.0
 
         # TODO: Calculate precision here
-        
+        for i in range(len(predicted)):
+            precision += len(set(predicted[i]).intersection(set(actual[i])))/len(predicted[i])
+        precision /= len(predicted)
+
         return precision
     
     def calculate_recall(self, actual: List[List[str]], predicted: List[List[str]]) -> float:

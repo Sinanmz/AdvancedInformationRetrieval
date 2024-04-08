@@ -1,20 +1,22 @@
-import streamlit as st
+import os
 import sys
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/indexer')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR')
+current_script_path = os.path.abspath(__file__)
+current_dir = os.path.dirname(current_script_path)
+project_root = os.path.dirname(current_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
-
-
-
-
-# sys.path.append("../")
 from Logic import utils
+from Logic.core.snippet import Snippet
+from Logic.core.preprocess import Preprocessor
+
+import streamlit as st
 import time
 from enum import Enum
 import random
-from Logic.core.snippet import Snippet
+
+
+
 
 snippet_obj = Snippet(
     number_of_words_on_each_side=3
@@ -34,9 +36,6 @@ class color(Enum):
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
     snippet, not_exist_words = snippet_obj.find_snippet(summary, query)
-    # print('SNIPPET:-------------------------------------------------------------------------')
-    # print(snippet)
-    # print('------------------------------------')
     if "***" in snippet:
         snippet = snippet.split()
         for i in range(len(snippet)):
@@ -61,19 +60,26 @@ def search_handling(
     search_weights,
     search_method,
 ):
+    preprocessor = Preprocessor([])
+    all_documents = []
+    for movie in utils.movies_dataset.values():
+        all_documents.append(movie["title"])
+        # all_documents.extend(movie["stars"])
+        for star in movie["stars"]:
+            all_documents.append(preprocessor.normalize(star))
+        all_documents.extend(movie["genres"])
+        # all_documents.extend(movie["directors"])
+        for director in movie["directors"]:
+            all_documents.append(preprocessor.normalize(director))
+        all_documents.extend(movie["summaries"])
+        # all_documents.extend(movie["writers"])
+        for writer in movie["writers"]:
+            all_documents.append(preprocessor.normalize(writer))
+        all_documents.extend(movie["synopsis"])
+        for review in movie["reviews"]:
+            all_documents.append(review[0])
+    
     if search_button:
-        all_documents = []
-        for movie in utils.movies_dataset.values():
-            all_documents.append(movie["title"])
-            all_documents.extend(movie["stars"])
-            all_documents.extend(movie["genres"])
-            all_documents.extend(movie["directors"])
-            all_documents.extend(movie["summaries"])
-            all_documents.extend(movie["writers"])
-            all_documents.extend(movie["synopsis"])
-            # for review in movie["reviews"]:
-                # all_documents.append(review[0])
-
         corrected_query = utils.correct_text(search_term, all_documents)
         
         if corrected_query != search_term:

@@ -1,3 +1,12 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+core_dir = os.path.dirname(current_script_path)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 class SpellCorrection:
     def __init__(self, all_documents):
         """
@@ -28,6 +37,7 @@ class SpellCorrection:
             A set of shingles.
         """
         shingles = set()
+        word = '$' + word + '$'
         
         # TODO: Create shingle here
         for i in range(len(word) - k + 1):
@@ -132,7 +142,10 @@ class SpellCorrection:
         # TODO: Do spell correction here.
         for word in query.split():
             word = word.lower()
-            if len(word) < 3 or word.isnumeric():
+            # if len(word) < 3 or word.isnumeric():
+            #     final_result += word + " "
+            #     continue
+            if word.isnumeric():
                 final_result += word + " "
                 continue
             top5_candidates = self.find_nearest_words(word)

@@ -1,6 +1,18 @@
-from index_reader import Index_reader
-from indexes_enum import Indexes, Index_types
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+indexer_dir = os.path.dirname(current_script_path)
+core_dir = os.path.dirname(indexer_dir)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+    
+from Logic.core.indexer.indexes_enum import Indexes, Index_types
+from Logic.core.indexer.index_reader import Index_reader
+
 import json
+
 
 class Metadata_index:
     def __init__(self, path='index/'):

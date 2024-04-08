@@ -1,6 +1,17 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+core_dir = os.path.dirname(current_script_path)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import numpy as np
 import itertools
 import random
+
+
 
 
 class MinHashLSH:

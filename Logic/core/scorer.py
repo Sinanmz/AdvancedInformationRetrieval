@@ -1,4 +1,14 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+core_dir = os.path.dirname(current_script_path)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import numpy as np
+
 
 class Scorer:    
     def __init__(self, index, number_of_documents):
@@ -167,6 +177,9 @@ class Scorer:
             for term in query_vector:
                 query_vector[term] /= norm
         
+        # print("QUERY VECTOR:", query_tfs)
+
+        
         doc_vector = {}
         for term in query:
             if term in self.index.keys():
@@ -176,7 +189,6 @@ class Scorer:
                     doc_vector[term] = 0
             else:
                 doc_vector[term] = 0
-
         if document_method[0] == 'l':
             for term, tf in doc_vector.items():
                 doc_vector[term] = np.log(1+tf)
@@ -189,9 +201,14 @@ class Scorer:
                 for term in doc_vector:
                     doc_vector[term] /= norm
         
+        # print("DOC VECTOR", doc_vector)
+
+        
         score = 0.0
         for term in query_vector:
             score += query_vector[term]*doc_vector[term]
+        
+        # print("SCORE:", score)
         
         return score
 

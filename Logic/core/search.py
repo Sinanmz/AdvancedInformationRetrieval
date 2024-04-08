@@ -1,17 +1,20 @@
-import json
-import numpy as np
 import os
 import sys
+current_script_path = os.path.abspath(__file__)
+core_dir = os.path.dirname(current_script_path)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
+from Logic.core.preprocess import Preprocessor
+from Logic.core.scorer import Scorer
+from Logic.core.indexer.indexes_enum import Indexes, Index_types
+from Logic.core.indexer.index_reader import Index_reader
 
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/indexer')
-sys.path.append('/Users/sina/Sem-5/MIR/Project/MIR/Logic/core')
-from preprocess import Preprocessor
-from scorer import Scorer
-# from indexer.indexes_enum import Indexes, Index_types
-# from indexer.index_reader import Index_reader
-from indexes_enum import Indexes, Index_types
-from index_reader import Index_reader
+import json
+import numpy as np
+
 
 class SearchEngine:
     def __init__(self):
@@ -178,12 +181,10 @@ class SearchEngine:
 
         for field in weights:
             #TODO
-            print(self.document_indexes.keys())
             scorer = Scorer(self.document_indexes[field], number_of_documents)
             if method == 'OkapiBM25':
                 average_document_field_length = self.metadata_index['averge_document_length'][field.value]
                 document_lengths = self.document_lengths_index[field]
-
                 scores[field] = scorer.compute_socres_with_okapi_bm25(query, average_document_field_length, document_lengths)
             else:
                 scores[field] = scorer.compute_scores_with_vector_space_model(query, method)

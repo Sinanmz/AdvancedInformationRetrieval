@@ -1,3 +1,12 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+core_dir = os.path.dirname(current_script_path)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import re
 import nltk
 import contractions
@@ -10,6 +19,7 @@ import json
 nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('stopwords')
+
 
 class Preprocessor:
 
@@ -47,19 +57,6 @@ class Preprocessor:
         return preprocessed_docs
 
     def expand_contractions(self, text: str):
-        """
-        Expand contractions in the text.
-
-        Parameters
-        ----------
-        text : str
-            The text to be processed.
-
-        Returns
-        ----------
-        str
-            The text with contractions expanded.
-        """
         return contractions.fix(text)
 
     def normalize(self, text: str):

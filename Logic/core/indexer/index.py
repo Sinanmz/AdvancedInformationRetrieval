@@ -1,8 +1,18 @@
-import time
 import os
+import sys
+current_script_path = os.path.abspath(__file__)
+indexer_dir = os.path.dirname(current_script_path)
+core_dir = os.path.dirname(indexer_dir)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from Logic.core.indexer.indexes_enum import Indexes
+
+import time
 import json
 import copy
-from indexes_enum import Indexes
 
 
 class Index:
