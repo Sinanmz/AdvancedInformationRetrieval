@@ -17,7 +17,7 @@ except LookupError:
     nltk.download('stopwords', quiet=True)
 
 class Snippet:
-    def __init__(self, number_of_words_on_each_side=5):
+    def __init__(self, number_of_words_on_each_side=3):
         """
         Initialize the Snippet
 
@@ -136,12 +136,16 @@ class Snippet:
         
         for query_word in occurances_dict:
             if query_word not in not_exist_words:
-                best_occurrences[query_word] = max(occurances_dict[query_word], key=occurances_dict[query_word].get)
+                query_word_best_point = max(occurances_dict[query_word].values())
+                best_occurrences[query_word] = []
+                for i in occurances_dict[query_word]:
+                    if occurances_dict[query_word][i] == query_word_best_point:
+                        best_occurrences[query_word].append(i)
         
         all_occurances = []
         for query_word in best_occurrences:
             if best_occurrences[query_word] != None:
-                all_occurances.append(best_occurrences[query_word])
+                all_occurances.extend(best_occurrences[query_word])
         all_occurances.sort()
 
         occurance_groups = []
