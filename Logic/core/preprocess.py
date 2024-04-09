@@ -40,12 +40,6 @@ class Preprocessor:
         """
         self.documents = documents
 
-        self.stopwords = set(stopwords.words('english'))
-        stop_words_path = project_root+'/Logic/core/stopwords.txt'
-        with open(stop_words_path, 'r') as file:
-            additional_stopwords = file.read().splitlines()
-        self.stopwords.update(additional_stopwords)
-
     def preprocess(self):
         """
         Preprocess the text using the methods in the class.
@@ -156,6 +150,12 @@ class Preprocessor:
         list
             The list of words with stopwords removed.
         """
+        self.stopwords = set(stopwords.words('english'))
+        stop_words_path = project_root+'/Logic/core/stopwords.txt'
+        with open(stop_words_path, 'r') as file:
+            additional_stopwords = file.read().splitlines()
+        self.stopwords.update(additional_stopwords)
+        
         return [word for word in words if word not in self.stopwords]
     
 
