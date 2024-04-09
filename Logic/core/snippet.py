@@ -290,22 +290,11 @@ class Snippet:
             end = min(len(doc), occurance_groups[-1] + self.number_of_words_on_each_side + 1)
             snippet = ' '.join(doc[start:end])
             for occurance in occurance_groups:
-                # for q_w, occurance_w in best_occurrences.items():
-                #     if occurance == occurance_w:
-                #         query_w = q_w
-                #         break
-                # index = doc[occurance].lower().find(query_w)
-                # replacement = doc[occurance][index:index+len(query_w)]
                 replacement = doc[occurance]
                 snippet = snippet.replace(replacement, f' ***{replacement}*** ')
             final_snippet += snippet + ' ... '
 
-
         final_snippet = final_snippet[:-5]
         final_snippet.replace('  ',' ') 
-        print(final_snippet)
-
-
         
-
         return final_snippet, not_exist_words
