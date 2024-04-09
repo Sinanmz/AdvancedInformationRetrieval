@@ -32,7 +32,7 @@ class color(Enum):
     CYAN = "#00FFFF"
     MAGENTA = "#FF00FF"
 
-# Made your code more sophisticated :)
+# Made the default code more sophisticated :)
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
     summary = summary.split()
