@@ -9,6 +9,9 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from typing import List
+import numpy as np
+import wandb
+
 
 class Evaluation:
 
@@ -59,6 +62,9 @@ class Evaluation:
         recall = 0.0
 
         # TODO: Calculate recall here
+        for i in range(len(predicted)):
+            recall += len(set(predicted[i]).intersection(set(actual[i])))/len(actual[i])
+        recall /= len(predicted)
 
         return recall
     
@@ -81,6 +87,11 @@ class Evaluation:
         f1 = 0.0
 
         # TODO: Calculate F1 here
+        for i in range(len(predicted)):
+            precision = len(set(predicted[i]).intersection(set(actual[i])))/len(predicted[i])
+            recall = len(set(predicted[i]).intersection(set(actual[i])))/len(actual[i])
+            f1 += 2*precision*recall/(precision+recall)
+        f1 /= len(predicted)
 
         return f1
     
@@ -103,6 +114,15 @@ class Evaluation:
         AP = 0.0
 
         # TODO: Calculate AP here
+        for i in range(len(predicted)):
+            correct = 0
+            precision = 0
+            for j in range(len(predicted[i])):
+                if predicted[i][j] in actual[i]:
+                    correct += 1
+                    precision += correct/(j+1)
+            AP += precision/correct
+        AP /= len(predicted)
 
         return AP
     
@@ -125,10 +145,19 @@ class Evaluation:
         MAP = 0.0
 
         # TODO: Calculate MAP here
-
+        for i in range(len(predicted)):
+            correct = 0
+            precision = 0.0
+            for j in range(len(predicted[i])):
+                if predicted[i][j] in actual[i]:
+                    correct += 1
+                    precision += correct/(j+1)
+            if correct > 0:
+                MAP += precision/correct
+            
         return MAP
     
-    def cacluate_DCG(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
+    def cacluate_DCG(self, actual: List[List[(str, int)]], predicted: List[List[str]]) -> float:
         """
         Calculates the Normalized Discounted Cumulative Gain (NDCG) of the predicted results
 
@@ -147,10 +176,18 @@ class Evaluation:
         DCG = 0.0
 
         # TODO: Calculate DCG here
+        for i in range(len(predicted)):
+            for j in range(len(predicted[i])):
+                for k in range(len(actual[i])):
+                    if predicted[i][j] == actual[i][k]:
+                        DCG += (2**actual[i][k][1])*(1/np.log2(j+2))
+                        break
 
+        DCG /= len(predicted)
+            
         return DCG
     
-    def cacluate_NDCG(self, actual: List[List[str]], predicted: List[List[str]]) -> float:
+    def cacluate_NDCG(self, actual: List[List[(str, int)]], predicted: List[List[str]]) -> float:
         """
         Calculates the Normalized Discounted Cumulative Gain (NDCG) of the predicted results
 
@@ -169,6 +206,26 @@ class Evaluation:
         NDCG = 0.0
 
         # TODO: Calculate NDCG here
+        valid_queries = 0
+        for i in range(len(predicted)):
+            DCG = 0.0
+            for j in range(len(predicted[i])):
+                for k in range(len(actual[i])):
+                    if predicted[i][j] == actual[i][k]:
+                        DCG += (2**actual[i][k][1])*(1/np.log2(j+2))
+                        break
+
+        
+            sorted_points = sorted(actual[i], key=lambda x: x[1], reverse=True)
+            ideal_DCG = 0.0
+            for j in range(len(predicted[i])):
+                    ideal_DCG += (2**sorted_points[j][1])*(1/np.log2(j+2))
+            
+            if ideal_DCG > 0:
+                NDCG += DCG/ideal_DCG
+                valid_queries += 1
+
+        NDCG /= valid_queries
 
         return NDCG
     
@@ -191,6 +248,12 @@ class Evaluation:
         RR = 0.0
 
         # TODO: Calculate MRR here
+        for i in range(len(predicted)):
+            for j in range(len(predicted[i])):
+                if predicted[i][j] in actual[i]:
+                    RR += 1/(j+1)
+                    break
+        RR /= len(predicted)
 
         return RR
     
@@ -213,6 +276,12 @@ class Evaluation:
         MRR = 0.0
 
         # TODO: Calculate MRR here
+        for i in range(len(predicted)):
+            for j in range(len(predicted[i])):
+                if predicted[i][j] in actual[i]:
+                    MRR += 1/(j+1)
+                    break
+        MRR /= len(predicted)
 
         return MRR
     
@@ -246,7 +315,16 @@ class Evaluation:
         print(f"name = {self.name}")
 
         #TODO: Print the evaluation metrics
-      
+        print(f'Precision: {precision}')
+        print(f'Recall: {recall}')
+        print(f'F1 Score: {f1}')
+        print(f'Average Precision (AP): {ap}')
+        print(f'Mean Average Precision (MAP): {map}')
+        print(f'Discounted Cumulative Gain (DCG): {dcg}')
+        print(f'Normalized Discounted Cumulative Gain (NDCG): {ndcg}')
+        print(f'Reciprocal Rank (RR): {rr}')
+        print(f'Mean Reciprocal Rank (MRR): {mrr}')
+
 
     def log_evaluation(self, precision, recall, f1, ap, map, dcg, ndcg, rr, mrr):
         """
@@ -276,6 +354,18 @@ class Evaluation:
         """
         
         #TODO: Log the evaluation metrics using Wandb
+        wandb.init(project='MIR_IMDB_Retrieval', entity='sinanmz')
+        wandb.log({
+            'Precision': precision,
+            'Recall': recall,
+            'F1 Score': f1,
+            'Average Precision (AP)': ap,
+            'Mean Average Precision (MAP)': map,
+            'Discounted Cumulative Gain (DCG)': dcg,
+            'Normalized Discounted Cumulative Gain (NDCG)': ndcg,
+            'Reciprocal Rank (RR)': rr,
+            'Mean Reciprocal Rank (MRR)': mrr
+        })
 
 
     def calculate_evaluation(self, actual: List[List[str]], predicted: List[List[str]]):
