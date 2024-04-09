@@ -281,15 +281,13 @@ if __name__ == '__main__':
     # Outputs:
 
     # Buckets:
-    # Buckets:
     # Bucket 1:       test1(index=0) - test2(index=1) 
-    # Bucket 2:       test7(index=6) - test8(index=7) 
-    # Bucket 3:       test13(index=12) - test14(index=13) 
-    # Bucket 4:       test15(index=14) - test16(index=15) 
-    # Bucket 5:       test17(index=16) - test18(index=17) 
-    # Bucket 6:       test19(index=18) - test20(index=19) 
-    # Bucket 7:       Apocalypse Now(index=75) - The Post(index=1273) 
-    # Bucket 8:       M(index=120) - Wild Strawberries(index=221) 
-    # Bucket 9:       Opening Night(index=791) - The Aura(index=1484) 
-    # Bucket 10:      The Batman Part II(index=1252) - We Live in Time(index=2149) 
-    # Bucket 11:      The Hunchback of Notre Dame(index=2118) - Return to Oz(index=2330)
+    # Bucket 2:       test13(index=12) - test14(index=13) 
+    # Bucket 3:       test15(index=14) - test16(index=15) 
+    # Bucket 4:       test17(index=16) - test18(index=17) 
+    # Bucket 5:       test19(index=18) - test20(index=19) 
+    # Bucket 6:       Unforgiven(index=167) - 30 Days of Night(index=1326) 
+    # Bucket 7:       Die Hard with a Vengeance(index=402) - I Am Legend(index=2250) 
+    # Bucket 8:       Doctor Who: The Fifth Doctor Adventures(index=481) - Doctor Who: The Sixth Doctor Adventures(index=1604) 
+    # Bucket 9:       The Batman Part II(index=1252) - We Live in Time(index=2149) 
+    # your final score in near duplicate detection: 0.9523809523809523
