@@ -16,10 +16,16 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 import json
 
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('stopwords')
 
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet', quiet=True)
+
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', quiet=True)
 
 class Preprocessor:
 
@@ -33,8 +39,12 @@ class Preprocessor:
             The list of documents to be preprocessed.
         """
         self.documents = documents
+
         self.stopwords = set(stopwords.words('english'))
-        self.lemmatizer = WordNetLemmatizer()
+        stop_words_path = project_root+'/Logic/core/stopwords.txt'
+        with open(stop_words_path, 'r') as file:
+            additional_stopwords = file.read().splitlines()
+        self.stopwords.update(additional_stopwords)
 
     def preprocess(self):
         """
@@ -73,6 +83,7 @@ class Preprocessor:
         str
             The normalized text.
         """
+        self.lemmatizer = WordNetLemmatizer()
         text = text.lower()
         text = unidecode.unidecode(text)
         words = word_tokenize(text)
