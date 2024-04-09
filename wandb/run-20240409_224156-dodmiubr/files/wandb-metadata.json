@@ -1,0 +1,49 @@
+{
+    "os": "macOS-14.1-arm64-arm-64bit",
+    "python": "3.12.2",
+    "heartbeatAt": "2024-04-09T19:11:59.005583",
+    "startedAt": "2024-04-09T19:11:56.219424",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "/Users/sina/Sem-5/MIR/Project/MIR/Logic/core/utility/evaluation.py",
+    "codePathLocal": "Logic/core/utility/evaluation.py",
+    "codePath": "Logic/core/utility/evaluation.py",
+    "git": {
+        "remote": "https://github.com/Sinanmz/MIR",
+        "commit": "13082fb13b3e934f5fd0ae175188e3a882f3e0d7"
+    },
+    "email": "sinanamazi2000@gmail.com",
+    "root": "/Users/sina/Sem-5/MIR/Project/MIR",
+    "host": "Sinas-MacBook-Pro-2.local",
+    "username": "sina",
+    "executable": "/Users/sina/miniforge3/envs/mir/bin/python",
+    "cpu_count": 10,
+    "cpu_count_logical": 10,
+    "cpu_freq": {
+        "current": 3504,
+        "min": 702,
+        "max": 3504
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3504,
+            "min": 702,
+            "max": 3504
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 460.4317207336426,
+            "used": 441.0978469848633
+        }
+    },
+    "gpuapple": {
+        "type": "arm",
+        "vendor": "Apple"
+    },
+    "memory": {
+        "total": 16.0
+    }
+}
