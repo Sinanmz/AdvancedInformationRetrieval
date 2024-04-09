@@ -14,7 +14,7 @@ import streamlit as st
 import time
 from enum import Enum
 import random
-
+import re
 
 
 
@@ -32,20 +32,66 @@ class color(Enum):
     CYAN = "#00FFFF"
     MAGENTA = "#FF00FF"
 
-
+# Made your code more sophisticated :)
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
+    summary = summary.split()
+    summary = ' '.join(summary)
     snippet, not_exist_words = snippet_obj.find_snippet(summary, query)
-    if "***" in snippet:
-        snippet = snippet.split()
-        for i in range(len(snippet)):
-            current_word = snippet[i]
-            if current_word.startswith("***") and current_word.endswith("***"):
-                current_word_without_star = current_word[3:-3]
-                summary = summary.replace(
-                    current_word_without_star,
-                    f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
-                )
+    # if "***" in snippet:
+    #     snippet = snippet.split()
+    #     for i in range(len(snippet)):
+    #         current_word = snippet[i]
+    #         if current_word.startswith("***") and current_word.endswith("***"):
+    #             current_word_without_star = current_word[3:-3]
+    #             summary = summary.replace(
+    #                 current_word_without_star,
+    #                 f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
+    #             )
+
+    if ' ... ' in snippet:
+        snips = snippet.split(' ... ')
+    else:
+        snips = [snippet]
+    
+    for snip in snips:
+        indexes = []
+        for i in range(len(snip.split())):
+            if snip.split()[i].startswith("***") and snip.split()[i].endswith("***"):
+                indexes.append(i)
+        
+        summary_before_change = ''
+        summary_after_change = ''
+        for i in range(len(snip.split())):
+            if i in indexes:
+                summary_before_change += snip.split()[i][3:-3] + ' '
+        
+                match_end = re.search(r"([\W_]+)$", snip.split()[i][3:-3])
+                if match_end != None:
+                    match_end = match_end.group(1)
+                else:
+                    match_end = ''
+
+                match_start = re.search(r"^([\W_]+)", snip.split()[i][3:-3])
+                if match_start != None:
+                    match_start = match_start.group(1)
+                else:
+                    match_start = ''
+
+                word = snip.split()[i][3:-3]
+                word = word[:len(word)-len(match_end)]
+                word = word[len(match_start):]
+
+                summary_after_change += f"{match_start}<b><font size='4' color={random.choice(list(color)).value}>{word}</font></b>{match_end} "
+
+            else:
+                summary_before_change += snip.split()[i] + ' '
+                summary_after_change += snip.split()[i] + ' '
+        
+        summary_before_change = summary_before_change.strip()
+        summary_after_change = summary_after_change.strip()
+        summary = summary.replace(summary_before_change, summary_after_change)
+        
     return summary
 
 
