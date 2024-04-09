@@ -35,42 +35,17 @@ class color(Enum):
 
 def get_summary_with_snippet(movie_info, query):
     summary = movie_info["first_page_summary"]
-    summary = ' '.join(summary.split())
     snippet, not_exist_words = snippet_obj.find_snippet(summary, query)
-    print(snippet)
     if "***" in snippet:
-        # snippet = snippet.split()
-        # for i in range(len(snippet)):
-            # current_word = snippet[i]
-            # if current_word.startswith("***") and current_word.endswith("***"):
-            #     current_word_without_star = current_word[3:-3]
-            #     summary = summary.replace(
-            #         current_word_without_star,
-            #         f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
-            #     )
-        if '...' in snippet:
-            snips = snippet.split('...')
-        else:
-            snips = [snippet]
-        print(snips)
-        for snip in snips:
-            idx1 = snip.find('***')
-            idx2 = snip[idx1+1:].find('***')
-            idx2 = idx2+idx1+1
-            print('-------------------------------')
-            print(idx1)
-            print(idx2)
-            print(snip[:idx1])
-            print(snip[idx1+3:idx2])
-            print(snip[idx2+3:])
-            print(snip)
-            print(snip[:idx1].rstrip() + ' ' + f"<b><font size='4' color={random.choice(list(color)).value}>{snip[idx1+3:idx2].strip()}</font></b>" + ' '+ snip[idx2+3:].lstrip())
-            print('-------------------------------')
-            summary = summary.replace(
-                snip,
-                snip[:idx1].rstrip() + ' ' + f"<b><font size='4' color={random.choice(list(color)).value}>{snip[idx1+3:idx2].strip()}</font></b>" + ' '+ snip[idx2+3:].lstrip(),
+        snippet = snippet.split()
+        for i in range(len(snippet)):
+            current_word = snippet[i]
+            if current_word.startswith("***") and current_word.endswith("***"):
+                current_word_without_star = current_word[3:-3]
+                summary = summary.replace(
+                    current_word_without_star,
+                    f"<b><font size='4' color={random.choice(list(color)).value}>{current_word_without_star}</font></b>",
                 )
-    print(summary)
     return summary
 
 

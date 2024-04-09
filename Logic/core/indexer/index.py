@@ -446,8 +446,8 @@ if __name__ == '__main__':
     print(index.check_if_indexing_is_good(Indexes.STARS.value, 'bob'))
 
     print("Checking if indexing is good (genres):")
-    print('Word: drama')
-    print(index.check_if_indexing_is_good(Indexes.GENRES.value, 'drama'))
+    print('Word: history')
+    print(index.check_if_indexing_is_good(Indexes.GENRES.value, 'history'))
     print('Word: comedy')
     print(index.check_if_indexing_is_good(Indexes.GENRES.value, 'comedy'))
 
@@ -458,70 +458,69 @@ if __name__ == '__main__':
     print(index.check_if_indexing_is_good(Indexes.SUMMARIES.value, 'happy'))
 
     # Outputs:
-   
-#     Cheking add/remove:
-#     Add is correct
-#     Remove is correct
-#     Checking if index loaded correctly (documents):
-#     True
-#     Checking if index loaded correctly (stars):
-#     True
-#     Checking if index loaded correctly (genres):
-#     True
-#     Checking if index loaded correctly (summaries):
-#     True
-#     Checking if indexing is good (documents):
-#     Word: tt1160419
-#     Brute force time:  6.985664367675781e-05
-#     Implemented time:  1.0967254638671875e-05
-#     Indexing is correct
-#     Indexing is good
-#     True
-#     Word: tt15239678
-#     Brute force time:  6.127357482910156e-05
-#     Implemented time:  1.1920928955078125e-06
-#     Indexing is correct
-#     Indexing is good
-#     True
-#     Checking if indexing is good (stars):
-#     Word: ben
-#     Brute force time:  4.887580871582031e-05
-#     Implemented time:  2.1457672119140625e-06
-#     Indexing is correct
-#     Indexing is good
-#     True
-#     Word: bob
-#     Brute force time:  0.00031304359436035156
-#     Implemented time:  3.814697265625e-06
-#     Indexing is correct
-#     Indexing is good
-#     True
-#     Checking if indexing is good (genres):
-#     Word: drama
-#     Brute force time:  1.6689300537109375e-06
-#     Implemented time:  8.344650268554688e-06
-#     Indexing is correct
-#     Indexing is bad
-#     False
-#     Word: comedy
-#     Brute force time:  1.0967254638671875e-05
-#     Implemented time:  4.76837158203125e-06
-#     Indexing is correct
-#     Indexing is good
-#     True
-#     Checking if indexing is good (summaries):
-#     Word: murder
-#     Brute force time:  7.605552673339844e-05
-#     Implemented time:  2.1457672119140625e-06
-#     Indexing is correct
-#     Indexing is good
-#     True
-#     Word: happy
-#     Brute force time:  0.0007660388946533203
-#     Implemented time:  3.0994415283203125e-06
-#     Indexing is correct
-#     Indexing is good
-#     True
+    # Cheking add/remove:
+    # Add is correct
+    # Remove is correct
+    # Checking if index loaded correctly (documents):
+    # True
+    # Checking if index loaded correctly (stars):
+    # True
+    # Checking if index loaded correctly (genres):
+    # True
+    # Checking if index loaded correctly (summaries):
+    # True
+    # Checking if indexing is good (documents):
+    # Word: tt1160419
+    # Brute force time:  7.104873657226562e-05
+    # Implemented time:  6.9141387939453125e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Word: tt15239678
+    # Brute force time:  8.082389831542969e-05
+    # Implemented time:  5.245208740234375e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Checking if indexing is good (stars):
+    # Word: ben
+    # Brute force time:  5.626678466796875e-05
+    # Implemented time:  2.86102294921875e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Word: bob
+    # Brute force time:  0.00032591819763183594
+    # Implemented time:  4.291534423828125e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Checking if indexing is good (genres):
+    # Word: history
+    # Brute force time:  2.5033950805664062e-05
+    # Implemented time:  1.6689300537109375e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Word: comedy
+    # Brute force time:  1.2159347534179688e-05
+    # Implemented time:  6.198883056640625e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Checking if indexing is good (summaries):
+    # Word: murder
+    # Brute force time:  7.605552673339844e-05
+    # Implemented time:  2.86102294921875e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
+    # Word: happy
+    # Brute force time:  0.0006990432739257812
+    # Implemented time:  5.0067901611328125e-06
+    # Indexing is correct
+    # Indexing is good
+    # True
 
 
 

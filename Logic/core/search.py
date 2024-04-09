@@ -40,26 +40,24 @@ class SearchEngine:
         }
         self.metadata_index = Index_reader(path, Indexes.DOCUMENTS, Index_types.METADATA).index
 
-
-
         number_of_documents = self.metadata_index['document_count']
+
+        # My codes:
+        # Calculating idf for each term in each field:
         self.idf = {}
         all_terms = {
             Indexes.STARS: set(),
             Indexes.GENRES: set(),
             Indexes.SUMMARIES: set()
         }
-
         for field in self.document_indexes:
             for term in self.document_indexes[field]:
                 all_terms[field].add(term)
-        
         self.idf = {
             Indexes.STARS: {},
             Indexes.GENRES: {},
             Indexes.SUMMARIES: {}
         }
-
         for field in all_terms:
             for term in all_terms[field]:
                 df = len(self.document_indexes[field].get(term, {}))
@@ -69,19 +67,17 @@ class SearchEngine:
                     self.idf[field][term] = np.log((number_of_documents)/(df))
 
 
+        # Calculating normalization factor for each document in each field:
         self.normalization_factors_idf = {
             Indexes.STARS: {},
             Indexes.GENRES: {},
             Indexes.SUMMARIES: {}
         }
-
         self.normalization_factors_no_idf = {
             Indexes.STARS: {},
             Indexes.GENRES: {},
             Indexes.SUMMARIES: {}
         }
-
-
         for field in [Indexes.STARS, Indexes.GENRES, Indexes.SUMMARIES]:
             for term in self.document_indexes[field]:
                 for doc_id in self.document_indexes[field][term]:
@@ -91,7 +87,6 @@ class SearchEngine:
                     if doc_id not in self.normalization_factors_idf[field]:
                         self.normalization_factors_idf[field][doc_id] = 0
                     self.normalization_factors_idf[field][doc_id] += (self.document_indexes[field][term][doc_id] * self.idf[field].get(term, 0)) ** 2
-        
         for field in [Indexes.STARS, Indexes.GENRES, Indexes.SUMMARIES]:
             for doc_id in self.normalization_factors_no_idf[field]:
                 self.normalization_factors_no_idf[field][doc_id] = np.sqrt(self.normalization_factors_no_idf[field][doc_id])
@@ -193,13 +188,7 @@ class SearchEngine:
                 #TODO
                 # pass
                 scorer = Scorer(self.tiered_index[field][tier], number_of_documents)
-                scorer.idf = self.idf[field]
-
-                if method != 'OkapiBM25':
-                    if method[5] == 't':
-                        scorer.normalization_factor = self.normalization_factors_idf[field]
-                    else:
-                        scorer.normalization_factor = self.normalization_factors_no_idf[field]
+                scorer.idf = self.idf[field]                    
                         
                 if method == 'OkapiBM25':
                     average_document_field_length = self.metadata_index['averge_document_length'][field.value]
@@ -207,6 +196,10 @@ class SearchEngine:
 
                     temp_scores = scorer.compute_socres_with_okapi_bm25(query, average_document_field_length, document_lengths)
                 else:
+                    if method[5] == 't':
+                        scorer.normalization_factor = self.normalization_factors_idf[field]
+                    else:
+                        scorer.normalization_factor = self.normalization_factors_no_idf[field]
                     temp_scores = scorer.compute_scores_with_vector_space_model(query, method)
                 
         
@@ -227,7 +220,7 @@ class SearchEngine:
 
             retrieved = set()
             for doc_id in aggregated_scores:
-                if aggregated_scores[doc_id] != 0.0:
+                if aggregated_scores[doc_id] > 0.0:
                     retrieved.add(doc_id)
 
             if len(retrieved) >= max_results:
@@ -254,22 +247,18 @@ class SearchEngine:
         for field in weights:
             #TODO
             scorer = Scorer(self.document_indexes[field], number_of_documents)
-            scorer.idf = self.idf[field]
-            if method != 'OkapiBM25':
-                if method[5] == 't':
-                    scorer.normalization_factor = self.normalization_factors_idf[field]
-                else:
-                    scorer.normalization_factor = self.normalization_factors_no_idf[field]
+            scorer.idf = self.idf[field]                
             if method == 'OkapiBM25':
                 average_document_field_length = self.metadata_index['averge_document_length'][field.value]
                 document_lengths = self.document_lengths_index[field]
                 scores[field] = scorer.compute_socres_with_okapi_bm25(query, average_document_field_length, document_lengths)
             else:
+                if method[5] == 't':
+                    scorer.normalization_factor = self.normalization_factors_idf[field]
+                else:
+                    scorer.normalization_factor = self.normalization_factors_no_idf[field]
                 scores[field] = scorer.compute_scores_with_vector_space_model(query, method)
         
-        
-
-
     def merge_scores(self, scores1, scores2):
         """
         Merges two dictionaries of scores.
@@ -296,8 +285,7 @@ class SearchEngine:
 
 if __name__ == '__main__':
     search_engine = SearchEngine()
-    # query = "spider man in wonderland"
-    query = "javad"
+    query = "spider man in wonderland"
     method = "lnc.ltc"
     weights = {
         Indexes.STARS: 1,
@@ -319,14 +307,14 @@ if __name__ == '__main__':
     
     # Outputs:
             
-    # [('tt0043274', 10.591902749552874), ('tt0145487', 9.265701388588703), ('tt0050613', 9.149541788983864), ('tt9362722', 8.379617332419956), ('tt1535108', 7.852809886615105), ('tt0316654', 7.655373639122422), ('tt0948470', 6.721467194212693), ('tt0245429', 5.936760338124282), ('tt1205489', 5.816980309065059), ('tt11097384', 5.5724942510569075)]
+    # [('tt0043274', 0.06577479354537515), ('tt1601792', 0.0573517010753171), ('tt12453114', 0.05460346636164671), ('tt9362722', 0.05200234869459513), ('tt0145487', 0.04831880083004559), ('tt1414867', 0.04532154476740904), ('tt24485052', 0.04472669500975058), ('tt10270200', 0.0442610718877456), ('tt0316654', 0.04139961209621638), ('tt11847842', 0.04107104913022986)]
     # Alice in Wonderland
-    # Spider-Man
-    # Throne of Blood
+    # Aa Naluguru
+    # Groundhog Day for a Black Man
     # Spider-Man: Across the Spider-Verse
-    # Elysium
+    # Spider-Man
+    # Why Did You Come to My House?
+    # Sirf Ek Bandaa Kaafi Hai
+    # The Vanishing Triangle
     # Spider-Man 2
-    # The Amazing Spider-Man
-    # Spirited Away
-    # Gran Torino
-    # Spaceman
+    # The Tourist

@@ -28,7 +28,6 @@ for movie in data:
             'writers': movie['writers'], 'synopsis': movie['synopsis'],
             'reviews': movie['reviews'], 
             }
-
     movies_dataset[movie['id']] = temp
 search_engine = SearchEngine()
 
@@ -91,6 +90,12 @@ def search(
         Indexes.GENRES: weights[1],
         Indexes.SUMMARIES: weights[2]
     }
+    if max_result_count == -1:
+        max_result_count = None
+    
+    if method not in ['ltn.lnn', 'ltc.lnc', 'OkapiBM25']:
+        raise ValueError("Invalid method")
+
     return search_engine.search(
         query, method, weights, max_results=max_result_count, safe_ranking=True
     )
