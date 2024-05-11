@@ -13,7 +13,6 @@ from Logic.core.indexer.index_reader import Index_reader
 
 import json
 
-
 class DocumentLengthsIndex:
     def __init__(self,path=project_root+'/index/'):
         """
