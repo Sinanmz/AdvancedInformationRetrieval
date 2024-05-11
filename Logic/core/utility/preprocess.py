@@ -1,7 +1,8 @@
 import os
 import sys
 current_script_path = os.path.abspath(__file__)
-core_dir = os.path.dirname(current_script_path)
+utility_dir = os.path.dirname(current_script_path)
+core_dir = os.path.dirname(utility_dir)
 Logic_dir = os.path.dirname(core_dir)
 project_root = os.path.dirname(Logic_dir)
 if project_root not in sys.path:
@@ -151,7 +152,7 @@ class Preprocessor:
             The list of words with stopwords removed.
         """
         self.stopwords = set(stopwords.words('english'))
-        stop_words_path = project_root+'/Logic/core/stopwords.txt'
+        stop_words_path = project_root+'/Logic/core/utility/stopwords.txt'
         with open(stop_words_path, 'r') as file:
             additional_stopwords = file.read().splitlines()
         self.stopwords.update(additional_stopwords)
@@ -168,16 +169,25 @@ if __name__ == '__main__':
         id = doc['id']
 
         stars = doc['stars']
-        preprocessor = Preprocessor(stars)
-        preprocessed_stars = preprocessor.preprocess()
+        if stars == None:
+            preprocessed_stars = []
+        else:
+            preprocessor = Preprocessor(stars)
+            preprocessed_stars = preprocessor.preprocess()
 
         genres = doc['genres']
-        preprocessor = Preprocessor(genres)
-        preprocessed_genres = preprocessor.preprocess()
+        if genres == None:
+            preprocessed_genres = []
+        else:
+            preprocessor = Preprocessor(genres)
+            preprocessed_genres = preprocessor.preprocess()
 
         summaries = doc['summaries']
-        preprocessor = Preprocessor(summaries)
-        preprocessed_sumaries = preprocessor.preprocess()
+        if summaries == None:
+            preprocessed_sumaries = []
+        else:
+            preprocessor = Preprocessor(summaries)
+            preprocessed_sumaries = preprocessor.preprocess()
 
         preprocessed_docs.append({
             'id': id,

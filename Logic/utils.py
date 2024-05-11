@@ -7,8 +7,8 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from Logic.core.search import SearchEngine
-from Logic.core.spell_correction import SpellCorrection
-from Logic.core.snippet import Snippet
+from Logic.core.utility.spell_correction import SpellCorrection
+from Logic.core.utility.snippet import Snippet
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
 
 from typing import Dict, List
@@ -25,8 +25,7 @@ for movie in data:
             'URL': 'placeholder', 'stars': movie['stars'], 
             'genres': movie['genres'], 'id': movie['id'],
             'directors': movie['directors'], 'summaries': movie['summaries'],
-            'writers': movie['writers'], 'synopsis': movie['synopsis'],
-            'reviews': movie['reviews'], 
+            'writers': movie['writers'], 'reviews': movie['reviews'], 
             }
     movies_dataset[movie['id']] = temp
 search_engine = SearchEngine()

@@ -7,15 +7,13 @@ project_root = os.path.dirname(Logic_dir)
 if project_root not in sys.path:
     sys.path.append(project_root)
 
-from Logic.core.preprocess import Preprocessor
-from Logic.core.scorer import Scorer
+from Logic.core.utility.preprocess import Preprocessor
+from Logic.core.utility.scorer import Scorer
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
 from Logic.core.indexer.index_reader import Index_reader
 
 import json
 import numpy as np
-from .utility import Preprocessor, Scorer
-from .indexer import Indexes, Index_types, Index_reader
 
 
 class SearchEngine:
