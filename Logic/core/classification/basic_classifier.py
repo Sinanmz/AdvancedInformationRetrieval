@@ -1,7 +1,17 @@
+import os
+import sys
+current_script_path = os.path.abspath(__file__)
+classification_dir = os.path.dirname(current_script_path)
+core_dir = os.path.dirname(classification_dir)
+Logic_dir = os.path.dirname(core_dir)
+project_root = os.path.dirname(Logic_dir)
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
 import numpy as np
 from tqdm import tqdm
 
-from ..word_embedding.fasttext_model import FastText
+from Logic.core.word_embedding.fasttext_model import FastText
 
 
 class BasicClassifier:
@@ -29,5 +39,10 @@ class BasicClassifier:
         float
             The percentage of positive reviews
         """
-        pass
+
+        predictions = self.predict(sentences)
+        positive_reviews = np.sum(predictions)
+        return positive_reviews / len(predictions)
+
+
 
