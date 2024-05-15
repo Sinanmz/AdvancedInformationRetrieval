@@ -268,7 +268,6 @@ class Scorer:
         """
 
         # TODO
-        # pass
 
         k1 = 1.5  # Free parameter
         b = 0.75  # Free parameter
@@ -315,7 +314,15 @@ class Scorer:
         """
 
         # TODO
-        pass
+
+        doc_list = self.get_list_of_documents(query)
+
+        scores = {}
+        for doc_id in doc_list:
+            scores[doc_id] = self.compute_score_with_unigram_model(query, doc_id, smoothing_method, document_lengths, alpha, lamda)
+
+        return scores
+        
 
     def compute_score_with_unigram_model(
         self, query, document_id, smoothing_method, document_lengths, alpha, lamda
@@ -347,4 +354,22 @@ class Scorer:
         """
 
         # TODO
-        pass
+        
+        document_length = document_lengths.get(document_id, 0)
+        score = 0.0
+        for term in query:
+            tf = self.index.get(term, {}).get(document_id, 0)
+            cf = sum(self.index.get(term, {}).values())
+            if smoothing_method == 'bayes':
+                score += np.log((tf + alpha * (cf / self.N)) / (document_length + alpha))
+            elif smoothing_method == 'naive':
+                score += np.log((tf + lamda) / (document_length + lamda))
+            elif smoothing_method == 'mixture':
+                doc_probability = tf / document_length if document_length > 0 else 0
+                collection_probability = cf / self.N
+                score += np.log(lamda * doc_probability + (1 - lamda) * collection_probability)
+            else:
+                raise ValueError("Invalid smoothing method.")
+        return score
+
+        
