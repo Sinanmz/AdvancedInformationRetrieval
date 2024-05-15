@@ -82,7 +82,6 @@ class ReviewLoader:
         else:
             self.get_embeddings()
             embeddings = self.embeddings
-            print(embeddings.shape)
 
         X_train, X_test, y_train, y_test = train_test_split(embeddings, self.sentiments, test_size=test_data_ratio, random_state=42)
         return X_train, X_test, y_train, y_test
