@@ -136,7 +136,7 @@ class SearchEngine:
             A list of tuples containing the document IDs and their scores sorted by their scores.
         """
         preprocessor = Preprocessor([query])
-        query = preprocessor.preprocess()[0]
+        query = preprocessor.preprocess()[0].split()
 
         scores = {}
         if method == "unigram":
@@ -144,7 +144,9 @@ class SearchEngine:
                 query, smoothing_method, weights, scores, alpha, lamda
             )
         elif safe_ranking:
-            self.find_scores_with_safe_ranking(query, method, weights, scores)
+            self.find_scores_with_safe_ranking(
+                query, method, weights, scores
+            )
         else:
             self.find_scores_with_unsafe_ranking(
                 query, method, weights, max_results, scores
@@ -283,8 +285,6 @@ class SearchEngine:
                     scorer.normalization_factor = self.normalization_factors_no_idf[field]
                 scores[field] = scorer.compute_scores_with_vector_space_model(query, method)
         
-            # TODO
-            pass
 
     def find_scores_with_unigram_model(
         self, query, smoothing_method, weights, scores, alpha=0.5, lamda=0.5
@@ -309,7 +309,13 @@ class SearchEngine:
             probability and the collection probability. Defaults to 0.5.
         """
         # TODO
-        pass
+        # pass
+        number_of_documents = self.metadata_index['document_count']
+        for field in weights:
+            scorer = Scorer(self.document_indexes[field], number_of_documents)
+            document_lengths = self.document_lengths_index[field]
+            scores[field] = scorer.compute_scores_with_unigram_model(query, smoothing_method, document_lengths, alpha, lamda)
+
 
     def merge_scores(self, scores1, scores2):
         """
@@ -337,36 +343,111 @@ class SearchEngine:
 
 if __name__ == "__main__":
     search_engine = SearchEngine()
-    query = "spider man in wonderland"
-    method = "lnc.ltc"
-    weights = {
-        Indexes.STARS: 1,
-        Indexes.GENRES: 1,
-        Indexes.SUMMARIES: 1
-    }
-    result = search_engine.search(query, method, weights, max_results=10, safe_ranking=True)
-
-    print(result)
-
-    with open(project_root+'/data/IMDB_Crawled.json') as file:
-        data = json.load(file)
-    for i in result:
-        for movie in data:
-            if movie['id'] == i[0]:
-                print(movie['title'])
-                break
+    query = "Spiderman far from dune"
+    for method in ['lnc.ltc', 'ltn.lnn', 'OkapiBM25', 'unigram']:
+        print("Method:", method)
+        weights = {
+            Indexes.STARS: 1,
+            Indexes.GENRES: 1,
+            Indexes.SUMMARIES: 1
+        }
+        if method == 'unigram':
+            for smoothing in ['bayes', 'naive', 'mixture']:
+                print("Smoothing:", smoothing)
+                result = search_engine.search(query, method, weights, smoothing_method=smoothing)
+                with open(project_root+'/data/IMDB_Crawled.json') as file:
+                    data = json.load(file)
+                for i in result:
+                    for movie in data:
+                        if movie['id'] == i[0]:
+                            print(movie['title'])
+                            break
+                print('*'*50)
+        else:
+            result = search_engine.search(query, method, weights, max_results=10, safe_ranking=True)
+            
+            with open(project_root+'/data/IMDB_Crawled.json') as file:
+                data = json.load(file)
+            for i in result:
+                for movie in data:
+                    if movie['id'] == i[0]:
+                        print(movie['title'])
+                        break
+            print('_'*50)
 
     
-    # Outputs:
+# Outputs:
             
-    # [('tt0043274', 0.06577479354537515), ('tt1601792', 0.0573517010753171), ('tt12453114', 0.05460346636164671), ('tt9362722', 0.05200234869459513), ('tt0145487', 0.04831880083004559), ('tt1414867', 0.04532154476740904), ('tt24485052', 0.04472669500975058), ('tt10270200', 0.0442610718877456), ('tt0316654', 0.04139961209621638), ('tt11847842', 0.04107104913022986)]
-    # Alice in Wonderland
-    # Aa Naluguru
-    # Groundhog Day for a Black Man
-    # Spider-Man: Across the Spider-Verse
-    # Spider-Man
-    # Why Did You Come to My House?
-    # Sirf Ek Bandaa Kaafi Hai
-    # The Vanishing Triangle
-    # Spider-Man 2
-    # The Tourist
+# Method: lnc.ltc
+# Spider-Man: Beyond the Spider-Verse
+# The Secrets of Frank Herbert's Dune
+# Dune: The Prophecy
+# The Amazing Adventures of Spider-Man
+# Watch Out, We're Mad
+# How Can I Help You
+# Spider-Man: No Way Home
+# Atlantis
+# Spider-Man 2: Another World
+# Spider-Man: Lotus
+# __________________________________________________
+# Method: ltn.lnn
+# The Amazing Spider-Man 2
+# Spider-Man: No Way Home
+# Spider-Man 2
+# Spider-Man: Into the Spider-Verse
+# Spider-Man 3
+# Watch Out, We're Mad
+# Spider-Man: Homecoming
+# The Amazing Spider-Man
+# Spider-Man
+# Dune
+# __________________________________________________
+# Method: OkapiBM25
+# Spider-Man: No Way Home
+# The Amazing Spider-Man 2
+# Watch Out, We're Mad
+# Spider-Man: Into the Spider-Verse
+# The Amazing Adventures of Spider-Man
+# Spider-Man 2: Another World
+# The Secrets of Frank Herbert's Dune
+# Dune: The Prophecy
+# Spider-Man: Homecoming
+# Spider-Man 2
+# __________________________________________________
+# Method: unigram
+# Smoothing: bayes
+# The Secrets of Frank Herbert's Dune
+# Spider-Man: Beyond the Spider-Verse
+# Dune: The Prophecy
+# How Can I Help You
+# Atlantis
+# Watch Out, We're Mad
+# Spider-Man: No Way Home
+# Children of Dune
+# The Amazing Spider-Man 2
+# Barefoot Jenny: Undercover
+# **************************************************
+# Smoothing: naive
+# Spider-Man: Beyond the Spider-Verse
+# The Secrets of Frank Herbert's Dune
+# How Can I Help You
+# Atlantis
+# Dune: The Prophecy
+# Barefoot Jenny: Undercover
+# JFK Revisited: Through the Looking Glass
+# Untitled Tom Cruise/SpaceX Project
+# Sergeant Slaughter, My Big Brother
+# Jalsa
+# **************************************************
+# Smoothing: mixture
+# The Secrets of Frank Herbert's Dune
+# Dune: The Prophecy
+# Watch Out, We're Mad
+# Spider-Man: Beyond the Spider-Verse
+# Children of Dune
+# The Amazing Spider-Man 2
+# The Amazing Adventures of Spider-Man
+# Spider-Man 2: Another World
+# Spider-Man: No Way Home
+# Dune
+# **************************************************
