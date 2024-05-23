@@ -17,7 +17,6 @@ import wandb
 from typing import List, Tuple
 from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.cluster import KMeans
 from collections import Counter
 from Logic.core.clustering.clustering_metrics import *
 
@@ -47,10 +46,34 @@ class ClusteringUtils:
             1. A list containing the cluster centers.
             2. A list containing the cluster index for each input vector.
         """
-        kmeans = KMeans(n_clusters=n_clusters, max_iter=max_iter)
-        kmeans.fit(emb_vecs)
-        cluster_centers = kmeans.cluster_centers_
-        cluster_indices = kmeans.labels_
+        # 1. Randomly initialize the cluster centers
+        cluster_centers = random.sample(list(emb_vecs), n_clusters)
+        cluster_indices = [-1] * len(emb_vecs)
+
+        for _ in range(max_iter):
+            for i, vec in enumerate(emb_vecs):
+                min_dist = float('inf')
+                for j, center in enumerate(cluster_centers):
+                    dist = np.linalg.norm(np.array(vec) - np.array(center))
+                    if dist < min_dist:
+                        min_dist = dist
+                        cluster_indices[i] = j
+
+            new_cluster_centers = []
+            for j in range(n_clusters):
+                cluster_points = [emb_vecs[i] for i in range(len(emb_vecs)) if cluster_indices[i] == j]
+                if len(cluster_points) > 0:
+                    new_center = np.mean(cluster_points, axis=0)
+                    new_cluster_centers.append(new_center)
+                else:
+                    new_center = random.choice(emb_vecs)
+                    new_cluster_centers.append(new_center)
+
+            if np.allclose(cluster_centers, new_cluster_centers):
+                break
+            else:
+                cluster_centers = new_cluster_centers
+
         return cluster_centers, cluster_indices
 
     def get_most_frequent_words(self, documents: List[str], top_n: int = 10) -> List[Tuple[str, int]]:
@@ -98,14 +121,13 @@ class ClusteringUtils:
             2) A list containing the cluster index for each input vector.
             3) The Within-Cluster Sum of Squares (WCSS) value for the clustering.
         """
-        kmeans = KMeans(n_clusters=n_clusters, max_iter=100)
-        kmeans.fit(emb_vecs)
-        cluster_centers = kmeans.cluster_centers_
-        cluster_indices = kmeans.labels_
-        wcss = kmeans.inertia_
+        cluster_centers, cluster_indices = self.cluster_kmeans(emb_vecs, n_clusters)
+        wcss = 0
+        for i, vec in enumerate(emb_vecs):
+            wcss += np.linalg.norm(np.array(vec) - np.array(cluster_centers[cluster_indices[i]])) ** 2
         return cluster_centers, cluster_indices, wcss
 
-    def cluster_hierarchical_single(self, emb_vecs: List) -> List:
+    def cluster_hierarchical_single(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with single linkage.
 
@@ -119,11 +141,11 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        hierarchical = AgglomerativeClustering(n_clusters=None, linkage='single', distance_threshold=0)
+        hierarchical = AgglomerativeClustering(linkage='single', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
-    def cluster_hierarchical_complete(self, emb_vecs: List) -> List:
+    def cluster_hierarchical_complete(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with complete linkage.
 
@@ -137,11 +159,11 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        hierarchical = AgglomerativeClustering(n_clusters=None, linkage='complete', distance_threshold=0)
+        hierarchical = AgglomerativeClustering(linkage='complete', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
-    def cluster_hierarchical_average(self, emb_vecs: List) -> List:
+    def cluster_hierarchical_average(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with average linkage.
 
@@ -155,11 +177,11 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        hierarchical = AgglomerativeClustering(n_clusters=None, linkage='average', distance_threshold=0)
+        hierarchical = AgglomerativeClustering(linkage='average', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
-    def cluster_hierarchical_ward(self, emb_vecs: List) -> List:
+    def cluster_hierarchical_ward(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with Ward's method.
 
@@ -173,7 +195,7 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
-        hierarchical = AgglomerativeClustering(n_clusters=None, linkage='ward', distance_threshold=0)
+        hierarchical = AgglomerativeClustering(linkage='ward', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
@@ -224,13 +246,13 @@ class ClusteringUtils:
         
         # Log the plot to wandb
         # TODO
-        wandb.log({"K-means Clustering": plt})
+        wandb.log({"K-means Clustering": wandb.Image(plt)})
 
         # Close the plot display window if needed (optional)
         # TODO
         plt.close()
 
-    def wandb_plot_hierarchical_clustering_dendrogram(self, data, project_name, linkage_method, run_name):
+    def wandb_plot_hierarchical_clustering_dendrogram(self, data, project_name, linkage_method, run_name, labels=None):
         """ This function performs hierarchical clustering on the provided data and generates a dendrogram plot, which is then logged to Weights & Biases (wandb).
 
         The dendrogram is a tree-like diagram that visualizes the hierarchical clustering process. It shows how the data points (or clusters) are progressively merged into larger clusters based on their similarity or distance.
@@ -265,13 +287,15 @@ class ClusteringUtils:
 
         # Create linkage matrix for dendrogram
         # TODO
-        plt.figure(figsize=(10, 7))
-        dendrogram(linkage_matrix)
+        plt.figure(figsize=(15, 10))
+        dendrogram(linkage_matrix, labels=labels, leaf_rotation=90)
         plt.title(f'Hierarchical Clustering Dendrogram ({linkage_method} linkage)')
         plt.xlabel('Sample index')
         plt.ylabel('Distance')
+        plt.subplots_adjust(bottom=0.4)
 
         wandb.log({"Hierarchical Clustering Dendrogram": wandb.Image(plt)})
+        plt.close()
 
     def plot_kmeans_cluster_scores(self, embeddings: List, true_labels: List, k_values: List[int], project_name=None,
                                    run_name=None):
