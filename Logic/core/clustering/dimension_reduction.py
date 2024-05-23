@@ -77,7 +77,7 @@ class DimensionReduction:
         # Plot the t-SNE embeddings
         # TODO
         plt.figure(figsize=(10, 7))
-        plt.scatter(tsne_2d_embeddings[:, 0], tsne_2d_embeddings[:, 1], c='blue', cmap='viridis')
+        plt.scatter(tsne_2d_embeddings[:, 0], tsne_2d_embeddings[:, 1])
         plt.title('t-SNE 2D Embeddings')
         plt.xlabel('t-SNE Component 1')
         plt.ylabel('t-SNE Component 2')
@@ -118,8 +118,9 @@ class DimensionReduction:
 
         # Fit PCA and compute cumulative explained variance ratio
         # TODO
-        self.pca.fit(data)
-        explained_variance_ratio = np.cumsum(self.pca.explained_variance_ratio_)
+        pca = PCA(n_components=min(data.shape))
+        pca.fit_transform(data)
+        explained_variance_ratio = np.cumsum(pca.explained_variance_ratio_)
 
         # Create the plot
         # TODO
