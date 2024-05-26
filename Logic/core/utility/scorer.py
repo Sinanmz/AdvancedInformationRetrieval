@@ -356,10 +356,14 @@ class Scorer:
         # TODO
         
         document_length = document_lengths.get(document_id, 0)
+        if document_length == 0:
+            return float('-inf')
+        
         score = 0.0
         for term in query:
             tf = self.index.get(term, {}).get(document_id, 0)
             cf = sum(self.index.get(term, {}).values())
+            
             if smoothing_method == 'bayes':
                 score += np.log((tf + alpha * (cf / self.N)) / (document_length + alpha))
             elif smoothing_method == 'naive':
