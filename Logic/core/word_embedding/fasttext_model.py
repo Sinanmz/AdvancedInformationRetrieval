@@ -265,3 +265,14 @@ if __name__ == "__main__":
     word2 = "king"
     word3 = "woman"
     print(f"Similarity between {word1} and {word2} is like similarity between {word3} and {ft_model.analogy(word1, word2, word3)}")
+
+# Outputs:
+
+# **********Similarity**********
+# Word: queens, Similarity: 0.7692434191703796
+# Word: queenthe, Similarity: 0.7094634771347046
+# Word: elizabeth, Similarity: 0.6992816925048828
+# Word: princess, Similarity: 0.6784615516662598
+# Word: tremaine, Similarity: 0.6622841358184814
+# **********Analogy**********
+# Similarity between man and king is like similarity between woman and queen
