@@ -135,7 +135,6 @@ if __name__ == '__main__':
     print(model.prediction_report(X_test, y_test))
 
 # Outputs:
-
 #               precision    recall  f1-score   support
 
 #            0       0.85      0.88      0.86      4961

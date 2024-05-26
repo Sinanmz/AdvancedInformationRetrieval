@@ -96,7 +96,7 @@ if __name__ == '__main__':
 #               precision    recall  f1-score   support
 
 #            0       0.79      0.84      0.81      4961
-#            1       0.83      0.78      0.80      5039
+#            1       0.83      0.79      0.81      5039
 
 #     accuracy                           0.81     10000
 #    macro avg       0.81      0.81      0.81     10000

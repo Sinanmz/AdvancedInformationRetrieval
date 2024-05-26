@@ -78,7 +78,7 @@ if __name__ == '__main__':
 # Outputs:
 #               precision    recall  f1-score   support
 
-#            0       0.86      0.86      0.86      4961
+#            0       0.86      0.85      0.86      4961
 #            1       0.86      0.87      0.86      5039
 
 #     accuracy                           0.86     10000

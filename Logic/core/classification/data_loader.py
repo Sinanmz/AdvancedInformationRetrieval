@@ -14,11 +14,9 @@ import json
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-# from sklearn.feature_extraction.text import CountVectorizer
 
 
 from Logic.core.word_embedding.fasttext_model import FastText
-# from Logic.core.word_embedding.fasttext_data_loader import preprocess_text
 from Logic.core.utility.preprocess import Preprocessor
  
 
