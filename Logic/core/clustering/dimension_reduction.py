@@ -88,6 +88,7 @@ class DimensionReduction:
         # Close the plot display window if needed (optional)
         # TODO
         plt.close()
+        run.finish()
 
     def wandb_plot_explained_variance_by_components(self, data, project_name, run_name):
         """
@@ -118,9 +119,13 @@ class DimensionReduction:
 
         # Fit PCA and compute cumulative explained variance ratio
         # TODO
-        pca = PCA(n_components=min(data.shape))
-        pca.fit_transform(data)
-        explained_variance_ratio = np.cumsum(pca.explained_variance_ratio_)
+        self.pca = PCA(n_components=min(data.shape))
+        self.pca.fit_transform(data)
+        explained_variance_ratio = np.cumsum(self.pca.explained_variance_ratio_)
+        explained_variance = self.pca.explained_variance_ratio_
+        singular_values = self.pca.singular_values_
+        table = wandb.Table(data=[[i + 1, explained_variance[i], singular_values[i]] for i in range(len(explained_variance))],
+                            columns=["Component", "Explained Variance", "Singular Values"])
 
         # Create the plot
         # TODO
@@ -135,7 +140,10 @@ class DimensionReduction:
         run = wandb.init(project=project_name, name=run_name)
 
         # Log the plot to wandb
-        wandb.log({"Explained Variance": wandb.Image(plt)})
+        wandb.log({"Cumulative Explained Variance": wandb.Image(plt)})
+        wandb.log({"Explained Variance Table": table})
+        
 
         # Close the plot display window if needed (optional)
         plt.close()
+        run.finish()

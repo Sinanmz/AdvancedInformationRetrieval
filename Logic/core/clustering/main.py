@@ -22,6 +22,7 @@ from Logic.core.clustering.clustering_utils import ClusteringUtils
 
 import json
 import matplotlib.pyplot as plt
+import wandb
 
 # Main Function: Clustering Tasks
 
@@ -42,10 +43,12 @@ crawled_path = project_root+'/data/IMDB_Crawled.json'
 with open(crawled_path, 'r') as f:
     data = json.load(f)
 
+num_samples = 10000
+
 movie_titles = []
 movie_embeddings = []
 movie_genres = []
-for movie in tqdm(data[:100], desc='Extracting Movie Embeddings'):
+for movie in tqdm(data[:num_samples], desc='Extracting Movie Embeddings'):
     if movie['synposis'] and movie['reviews'] and movie['summaries']and movie['title'] and movie['genres']:
         movie_titles.append(movie['title'])
         synopsis_vector = ft_model.get_query_embedding(preprocess_text(' '.join(movie['synposis'])))
@@ -55,11 +58,12 @@ for movie in tqdm(data[:100], desc='Extracting Movie Embeddings'):
         movie_genres.append(movie['genres'][0])
 
 
-genre2idx = {genre: idx for idx, genre in enumerate(set(movie_genres))} 
+genre2idx = {genre: idx for idx, genre in enumerate(set(movie_genres))}
 idx2genre = {idx: genre for genre, idx in genre2idx.items()}
 movie_genres_ids = [genre2idx[genre] for genre in movie_genres]
 
 embeddings = np.array(movie_embeddings)
+# print(embeddings)
 
 # 1. Dimension Reduction
 # TODO: Perform Principal Component Analysis (PCA):
@@ -68,13 +72,15 @@ embeddings = np.array(movie_embeddings)
 #     - Draw plots to visualize the results.
 dimension_reduction = DimensionReduction()
 reduced_embeddings = dimension_reduction.pca_reduce_dimension(embeddings, n_components=2)
-dimension_reduction.wandb_plot_explained_variance_by_components(embeddings, project_name='Clustering', run_name='Main')
+dimension_reduction.wandb_plot_explained_variance_by_components(embeddings, project_name=f'MIR_Clustering_{num_samples}', run_name='Explained Variance')
+for i, explained_variance in enumerate(dimension_reduction.pca.explained_variance_ratio_):
+    print(f"Explained Variance for Component {i+1}: {explained_variance}")
+    print(f"Singluar Value for Component {i+1}: {dimension_reduction.pca.singular_values_[i]}")
 
 # TODO: Implement t-SNE (t-Distributed Stochastic Neighbor Embedding):
 #     - Create the convert_to_2d_tsne function, which takes a list of embedding vectors as input and reduces the dimensionality to two dimensions using the t-SNE method.
 #     - Use the output vectors from this step to draw the diagram.
-
-dimension_reduction.wandb_plot_2d_tsne(embeddings, project_name='Clustering', run_name='Main')
+# dimension_reduction.wandb_plot_2d_tsne(embeddings, project_name=f'Clustering_{num_samples}', run_name='2D t-SNE')
 
 # 2. Clustering
 ## K-Means Clustering
@@ -85,37 +91,44 @@ dimension_reduction.wandb_plot_2d_tsne(embeddings, project_name='Clustering', ru
 #     - Determine the genre of each cluster based on the number of documents in each cluster.
 #     - Draw the resulting clustering using the two-dimensional vectors from the previous section.
 #     - Check the implementation and efficiency of the algorithm in clustering similar documents.
-k = [2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25]
+k = [5, 10, 15, 20, 25]
 for k_i in k:
-    cluster_centers, clusters = ClusteringUtils().cluster_kmeans(embeddings, n_clusters=k_i, max_iter=100)
+    cluster_centers, clusters = ClusteringUtils().cluster_kmeans(embeddings, n_clusters=k_i)
     cluster_genres = []
     for cluster in range(k_i):
         cluster_genres.append(np.argmax(np.bincount([movie_genres_ids[i] for i in range(len(clusters)) if clusters[i] == cluster])))
     print(f"Genres for k={k_i}: {[idx2genre[genre] for genre in cluster_genres]}")
-    ClusteringUtils().visualize_kmeans_clustering_wandb(embeddings, k_i, project_name='Clustering', run_name='Main')
+    ClusteringUtils().visualize_kmeans_clustering_wandb(embeddings, k_i, project_name=f'MIR_Clustering_{num_samples}', run_name=f'KMeans_{k_i}')
+
+k = [i+5 for i in range(46)]
+ClusteringUtils().visualize_elbow_method_wcss(embeddings, k, project_name=f'MIR_Clustering_{num_samples}', run_name='Elbow Method WCSS')
 
 # TODO: Draw the silhouette score graph for different values of k and perform silhouette analysis to choose the appropriate k.
 # TODO: Plot the purity value for k using the labeled data and report the purity value for the final k. (Use the provided functions in utilities)
 silhouette_scores = []
 purity_scores = []
+adjusted_rand_scores = []
+num_tries = 10
 for k_i in k:
-    cluster_centers, clusters = ClusteringUtils().cluster_kmeans(embeddings, n_clusters=k_i, max_iter=100)
-    silhouette_score = ClusteringMetrics().silhouette_score(embeddings, clusters)
-    purity_score = ClusteringMetrics().purity_score(movie_genres_ids, clusters)
+    silhouette_score = 0
+    purity_score = 0
+    adjusted_rand_score = 0
+    for _ in range(num_tries):
+        cluster_centers, clusters = ClusteringUtils().cluster_kmeans(embeddings, n_clusters=k_i)
+        silhouette_score += ClusteringMetrics().silhouette_score(embeddings, clusters)
+        purity_score += ClusteringMetrics().purity_score(movie_genres_ids, clusters)
+        adjusted_rand_score += ClusteringMetrics().adjusted_rand_score(movie_genres_ids, clusters)
+    silhouette_score /= num_tries
+    purity_score /= num_tries
+    adjusted_rand_score /= num_tries
     silhouette_scores.append(silhouette_score)
     purity_scores.append(purity_score)
+    adjusted_rand_scores.append(adjusted_rand_score)
     print(f"Silhouette Score for k={k_i}: {silhouette_score}")
     print(f"Purity Score for k={k_i}: {purity_score}")
+    print(f"Adjusted Rand Score for k={k_i}: {adjusted_rand_score}")
 
-plt.plot(k, silhouette_scores)
-plt.plot(k, purity_scores)
-plt.xticks(k)
-plt.xlabel('Number of Clusters')
-plt.ylabel('Score')
-plt.legend(['Silhouette Score', 'Purity Score'])
-plt.title('K-Means Clustering Scores')
-plt.show()
-
+ClusteringUtils().plot_kmeans_cluster_scores(embeddings, movie_genres_ids, k, project_name=f'MIR_Clustering_{num_samples}', run_name='KMeans Scores')
 
 ## Hierarchical Clustering
 # TODO: Perform hierarchical clustering with all different linkage methods.
@@ -146,17 +159,30 @@ for method in linkage_methods:
     print(f"Silhouette Score for Hierarchical Clustering with {method} linkage: {silhouette_score}")
     print(f"Purity Score for Hierarchical Clustering with {method} linkage: {purity_score}")
     print(f"Adjusted Rand Score for Hierarchical Clustering with {method} linkage: {adjusted_rand_score}")
-    ClusteringUtils().wandb_plot_hierarchical_clustering_dendrogram(data=embeddings, project_name='Clustering', 
-                                                                    linkage_method=method, run_name='test', labels=movie_titles)
+    ClusteringUtils().wandb_plot_hierarchical_clustering_dendrogram(data=embeddings, project_name=f'MIR_Clustering_{num_samples}', 
+                                                                    linkage_method=method, run_name=f"Hierarchical Clustering Dendrogram with {method} linkage", labels=movie_titles)
 
-plt.plot(linkage_methods, silhouette_scores)
-plt.plot(linkage_methods, purity_scores)
-plt.plot(linkage_methods, adjusted_rand_scores)
+run = wandb.init(project=f'MIR_Clustering_{num_samples}', name='Hierarchical Clustering Scores')
+plt.scatter(linkage_methods, silhouette_scores)
+plt.scatter(linkage_methods, purity_scores)
+plt.scatter(linkage_methods, adjusted_rand_scores)
 plt.xlabel('Linkage Method')
 plt.ylabel('Score')
 plt.legend(['Silhouette Score', 'Purity Score', 'Adjusted Rand Score'])
 plt.title('Hierarchical Clustering Scores')
-plt.show()
+metrics_table = wandb.Table(data = [[linkage_methods[i], silhouette_scores[i], purity_scores[i], adjusted_rand_scores[i]] for i in range(len(linkage_methods))], 
+                            columns = ["Linkage Method", "Silhouette Score", "Purity Score", "Adjusted Rand Score"])
+
+wandb.log({"Hierarchical Clustering Scores": wandb.Image(plt)})
+wandb.log({"Hierarchical Clustering Metrics": metrics_table})
+
+plt.close()
+run.finish()
+
+
+
+
+
 
 
 
