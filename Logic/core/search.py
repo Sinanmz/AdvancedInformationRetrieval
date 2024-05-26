@@ -394,10 +394,10 @@ if __name__ == "__main__":
 # The Amazing Spider-Man 2
 # Spider-Man: No Way Home
 # Spider-Man 2
-# Spider-Man: Into the Spider-Verse
 # Spider-Man 3
-# Watch Out, We're Mad
+# Spider-Man: Into the Spider-Verse
 # Spider-Man: Homecoming
+# Watch Out, We're Mad
 # The Amazing Spider-Man
 # Spider-Man
 # Dune
@@ -434,8 +434,8 @@ if __name__ == "__main__":
 # Atlantis
 # Dune: The Prophecy
 # Barefoot Jenny: Undercover
-# JFK Revisited: Through the Looking Glass
 # Untitled Tom Cruise/SpaceX Project
+# JFK Revisited: Through the Looking Glass
 # Sergeant Slaughter, My Big Brother
 # Jalsa
 # **************************************************
