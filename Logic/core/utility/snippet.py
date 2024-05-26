@@ -1,7 +1,8 @@
 import os
 import sys
 current_script_path = os.path.abspath(__file__)
-core_dir = os.path.dirname(current_script_path)
+utility_dir = os.path.dirname(current_script_path)
+core_dir = os.path.dirname(utility_dir)
 Logic_dir = os.path.dirname(core_dir)
 project_root = os.path.dirname(Logic_dir)
 if project_root not in sys.path:
@@ -45,7 +46,7 @@ class Snippet:
 
         # TODO: remove stop words from the query.
         stop_words = set(stopwords.words('english'))
-        stop_words_path = project_root+'/Logic/core/stopwords.txt'
+        stop_words_path = project_root+'/Logic/core/utility/stopwords.txt'
         with open(stop_words_path, 'r') as file:
             additional_stopwords = file.read().splitlines()
 
