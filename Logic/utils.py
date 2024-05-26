@@ -11,6 +11,7 @@ from Logic.core.utility.spell_correction import SpellCorrection
 from Logic.core.utility.snippet import Snippet
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
 
+
 from typing import Dict, List
 import json
 
@@ -25,7 +26,7 @@ for movie in data:
             'URL': 'placeholder', 'stars': movie['stars'], 
             'genres': movie['genres'], 'id': movie['id'],
             'directors': movie['directors'], 'summaries': movie['summaries'],
-            'writers': movie['writers'], 'reviews': movie['reviews'], 
+            'writers': movie['writers'], 'reviews': movie['reviews'], 'synopsis': movie['synposis'], 'Image_URL': None,
             }
     movies_dataset[movie['id']] = temp
 search_engine = SearchEngine()
@@ -59,6 +60,10 @@ def search(
     weights: list = [0.3, 0.3, 0.4],
     should_print=False,
     preferred_genre: str = None,
+    unigram_smoothing = 'mixture', 
+    alpha = .5, 
+    lamda = .5
+
 ):
     """
     Finds relevant documents to query
@@ -97,12 +102,15 @@ def search(
     if max_result_count == -1:
         max_result_count = None
     
-    if method not in ['ltn.lnn', 'ltc.lnc', 'OkapiBM25']:
-        raise ValueError("Invalid method")
-
-    return search_engine.search(
-        query, method, weights, max_results=max_result_count, safe_ranking=True
-    )
+    if method in ['ltn.lnn', 'ltc.lnc', 'OkapiBM25']:
+        return search_engine.search(
+            query, method, weights, max_results=max_result_count, safe_ranking=True
+        )
+    else:
+        return search_engine.search(
+            query, method, weights, max_results=max_result_count, smoothing_method=unigram_smoothing, alpha=alpha, lamda=lamda
+        )
+    
 
 
 def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, str]:
@@ -141,4 +149,6 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
     #     f"https://www.imdb.com/title/{result['id']}"  # The url pattern of IMDb movies
     # )
     # return result
-    return None
+    movie = movies_dataset.get(id)
+    movie['URL'] = f"https://www.imdb.com/title/{id}"
+    return movie

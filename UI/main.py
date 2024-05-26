@@ -7,8 +7,7 @@ if project_root not in sys.path:
     sys.path.append(project_root)
 
 from Logic import utils
-from Logic.core.snippet import Snippet
-from Logic.core.preprocess import Preprocessor
+from Logic.core.utility.snippet import Snippet
 
 import streamlit as st
 import time
@@ -17,6 +16,10 @@ import random
 from Logic.core.utility.snippet import Snippet
 from Logic.core.link_analysis.analyzer import LinkAnalyzer
 from Logic.core.indexer.index_reader import Index_reader, Indexes
+from Logic.core.utility.preprocess import Preprocessor
+
+
+import re
 
 snippet_obj = Snippet()
 
@@ -131,26 +134,42 @@ def search_handling(
     filter_button,
     num_filter_results,
 ):
-    
     preprocessor = Preprocessor([])
     all_documents = []
     for movie in utils.movies_dataset.values():
-        all_documents.append(movie["title"])
+        if movie["title"]:
+            all_documents.append(movie["title"])
+
         # all_documents.extend(movie["stars"])
-        for star in movie["stars"]:
-            all_documents.append(preprocessor.normalize(star))
-        all_documents.extend(movie["genres"])
+        if movie["stars"]:
+            for star in movie["stars"]:
+                if star:
+                    all_documents.append(preprocessor.normalize(star))
+        if movie["genres"]:
+            all_documents.extend(movie["genres"])
+
         # all_documents.extend(movie["directors"])
-        for director in movie["directors"]:
-            all_documents.append(preprocessor.normalize(director))
-        all_documents.extend(movie["summaries"])
+        # if movie["directors"]:
+        #     for director in movie["directors"]:
+        #         if director:
+        #             all_documents.append(preprocessor.normalize(director))
+        
+        if movie["summaries"]:
+            all_documents.extend(movie["summaries"][:5])
+
         # all_documents.extend(movie["writers"])
-        for writer in movie["writers"]:
-            all_documents.append(preprocessor.normalize(writer))
-        all_documents.extend(movie["synopsis"])
-        for review in movie["reviews"]:
-            all_documents.append(review[0])
-            
+        # if movie["writers"]:
+        #     for writer in movie["writers"]:
+        #         if writer:
+        #             all_documents.append(preprocessor.normalize(writer))
+
+        if movie["synopsis"]:
+            all_documents.extend(movie["synopsis"][:5])
+
+        if movie["reviews"]:
+            for review in movie["reviews"][:5]:
+                if review:
+                    all_documents.append(review[0])
     if filter_button:
         if "search_results" in st.session_state:
             top_actors, top_movies = get_top_x_movies_by_rank(
@@ -204,7 +223,7 @@ def search_handling(
         return
 
     if search_button:
-        corrected_query = utils.correct_text(search_term, utils.all_documents)
+        corrected_query = utils.correct_text(search_term, all_documents)
 
         if corrected_query != search_term:
             st.warning(f"Your search terms were corrected to: {corrected_query}")
@@ -213,6 +232,7 @@ def search_handling(
         with st.spinner("Searching..."):
             time.sleep(0.5)  # for showing the spinner! (can be removed)
             start_time = time.time()
+
             result = utils.search(
                 search_term,
                 search_max_num,
@@ -232,26 +252,18 @@ def search_handling(
 
             search_time(start_time, end_time)
 
-            for i in range(len(result)):
-                card = st.columns([3, 1])
-                info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
-                fps = info['first_page_summary']
-                if len(fps) > 30 and fps[1:].rfind(fps[:30]) != -1:
-                    info['first_page_summary'] = fps[fps[1:].rfind(fps[:20])+1:]
-                with card[0].container():
-                    st.title(info["title"])
-                    st.markdown(f"[Link to movie]({info['URL']})")
-                    st.write(f"Relevance Score: {result[i][1]}")
-                    st.markdown(
-                        f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
-                        unsafe_allow_html=True,
-                    )
         for i in range(len(result)):
             card = st.columns([3, 1])
             info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
             with card[0].container():
-                st.title(info["title"])
-                st.markdown(f"[Link to movie]({info['URL']})")
+                if info["title"]:
+                    st.title(info["title"])
+                else:
+                    st.title("Title not found")
+                if info["URL"]:
+                    st.markdown(f"[Link to movie]({info['URL']})")
+                else:
+                    st.write("URL not found")
                 st.write(f"Relevance Score: {result[i][1]}")
                 st.markdown(
                     f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
@@ -260,27 +272,33 @@ def search_handling(
 
             with st.container():
                 st.markdown("**Directors:**")
-                num_authors = len(info["directors"])
+                num_authors = len(info["directors"]) if info["directors"] else 0
                 for j in range(num_authors):
                     st.text(info["directors"][j])
 
             with st.container():
                 st.markdown("**Stars:**")
-                num_authors = len(info["stars"])
-                stars = "".join(star + ", " for star in info["stars"])
-                st.text(stars[:-2])
+                num_authors = len(info["stars"]) if info["stars"] else 0
+                if info['stars']:
+                    stars = "".join(star + ", " for star in info["stars"])
+                    st.text(stars[:-2])
+                else:
+                    st.text("Stars not found")
 
                 topic_card = st.columns(1)
                 with topic_card[0].container():
                     st.write("Genres:")
-                    num_topics = len(info["genres"])
+                    num_topics = len(info["genres"]) if info["genres"] else 0
                     for j in range(num_topics):
                         st.markdown(
                             f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
                             unsafe_allow_html=True,
                         )
             with card[1].container():
-                st.image(info["Image_URL"], use_column_width=True)
+                if info["Image_URL"]:
+                    st.image(info["Image_URL"], use_column_width=True)
+                # else:
+                    # st.write("Image not found")
 
             st.divider()
 
@@ -302,8 +320,6 @@ def main():
         unsafe_allow_html=True,
     )
 
-    search_term = st.text_input("Search Term")
-    # search_summary_terms = st.text_input("Search in summary of movie")
     search_term = st.text_input("Seacrh Term")
     with st.expander("Advanced Search"):
         search_max_num = st.number_input(
@@ -375,7 +391,6 @@ def main():
 
     search_button = st.button("Search!")
     filter_button = st.button("Filter movies by ranking")
-
     search_handling(
         search_button,
         search_term,
