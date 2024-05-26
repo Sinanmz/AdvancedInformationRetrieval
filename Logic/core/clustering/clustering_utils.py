@@ -28,7 +28,7 @@ class ClusteringUtils:
     def __init__(self):
         pass
 
-    def cluster_kmeans(self, emb_vecs: List, n_clusters: int, max_iter: int = 2000) -> Tuple[List, List]:
+    def cluster_kmeans(self, emb_vecs: List, n_clusters: int, max_iter: int = 500) -> Tuple[List, List]:
         """
         Clusters input vectors using the K-means method.
 
