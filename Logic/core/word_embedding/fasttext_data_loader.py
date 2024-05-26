@@ -123,28 +123,22 @@ class FastTextDataLoader:
         df['genres'] = df['genres'].apply(lambda x: ' '.join(sorted(x)))
         df['genres'] = le.fit_transform(df['genres'])
         for index, row in tqdm(df.iterrows(), total=df.shape[0], desc='Creating training data'):
+            inp = ""
             synopses = row['synopsis']
             if synopses:
                 for synopsis in synopses:
-                    X.append(preprocess_text(synopsis))
-                    y.append(row['genres'])
-
+                    inp += preprocess_text(synopsis) + "\n"
             summaries = row['summaries']
             if summaries:
                 for summary in summaries:
-                    X.append(preprocess_text(summary))
-                    y.append(row['genres'])
-
+                    inp += preprocess_text(summary) + "\n"
             reviews = row['reviews']
             if reviews:
                 for review in reviews:
-                    X.append(preprocess_text(review[0]))
-                    y.append(row['genres'])
-
-            # title = row['title']
-            # if title:
-            #     X.append(preprocess_text(title))
-            #     y.append(row['genres'])
+                    inp += preprocess_text(review[0]) + "\n"
+                    
+            X.append(inp)
+            y.append(row['genres'])
 
         X = np.array(X)
         y = np.array(y)
