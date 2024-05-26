@@ -29,7 +29,7 @@ except LookupError:
     nltk.download('stopwords', quiet=True)
 
 class Preprocessor:
-
+    
     def __init__(self, documents: list):
         """
         Initialize the class.

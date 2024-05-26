@@ -367,7 +367,7 @@ class Scorer:
             if smoothing_method == 'bayes':
                 score += np.log((tf + alpha * (cf / self.N)) / (document_length + alpha))
             elif smoothing_method == 'naive':
-                score += np.log((tf + lamda) / (document_length + lamda))
+                score += np.log((tf + 1) / (document_length + len(self.index)))
             elif smoothing_method == 'mixture':
                 doc_probability = tf / document_length if document_length > 0 else 0
                 collection_probability = cf / self.N

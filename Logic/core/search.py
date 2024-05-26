@@ -377,7 +377,6 @@ if __name__ == "__main__":
 
     
 # Outputs:
-            
 # Method: lnc.ltc
 # Spider-Man: Beyond the Spider-Verse
 # The Secrets of Frank Herbert's Dune
@@ -393,9 +392,9 @@ if __name__ == "__main__":
 # Method: ltn.lnn
 # The Amazing Spider-Man 2
 # Spider-Man: No Way Home
-# Spider-Man 2
 # Spider-Man 3
 # Spider-Man: Into the Spider-Verse
+# Spider-Man 2
 # Spider-Man: Homecoming
 # Watch Out, We're Mad
 # The Amazing Spider-Man
@@ -428,16 +427,16 @@ if __name__ == "__main__":
 # Barefoot Jenny: Undercover
 # **************************************************
 # Smoothing: naive
-# Spider-Man: Beyond the Spider-Verse
-# The Secrets of Frank Herbert's Dune
-# How Can I Help You
-# Atlantis
-# Dune: The Prophecy
-# Barefoot Jenny: Undercover
-# Untitled Tom Cruise/SpaceX Project
-# JFK Revisited: Through the Looking Glass
-# Sergeant Slaughter, My Big Brother
-# Jalsa
+# Spider-Man: No Way Home
+# The Amazing Spider-Man 2
+# Spider-Man: Into the Spider-Verse
+# Spider-Man 2
+# Spider-Man 3
+# Spider-Man: Homecoming
+# Shrek 2
+# Dune
+# Dune
+# St. Paul
 # **************************************************
 # Smoothing: mixture
 # The Secrets of Frank Herbert's Dune
