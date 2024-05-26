@@ -48,12 +48,12 @@ class LinkAnalyzer:
             self.graph.add_node(movie_id)
             self.movie_id2name[movie_id] = movie['title']
             
-            if movie['stars'] == None:
+            if not movie['stars']:
                 continue
             for star in movie['stars']:
                 star_name = star
                 self.graph.add_node(star_name)
-                self.graph.add_edge(movie_id, star_name)
+                self.graph.add_edge(star_name, movie_id)
                 self.stars.add(star_name)
 
         self.hubs = list(self.graph.graph.nodes())
@@ -85,7 +85,7 @@ class LinkAnalyzer:
             for star in movie['stars']:
                 if star in self.hubs:
                     self.graph.add_node(star)
-                    self.graph.add_edge(movie_id, star)
+                    self.graph.add_edge(star, movie_id)
 
 
     def hits(self, num_iteration=5, max_result=10):
@@ -110,38 +110,31 @@ class LinkAnalyzer:
         # h_s = []
 
         #TODO
-        hub_scores = {node: 1 for node in self.graph.graph.nodes()}  # Start with equal scores
-        auth_scores = {node: 1 for node in self.graph.graph.nodes()}
+        hub_scores = {node: 1.0 for node in self.graph.graph.nodes()}  # Start with equal scores
+        auth_scores = {node: 1.0 for node in self.graph.graph.nodes()}
         for _ in range(num_iteration):
             # Update authority scores
-            new_auth_scores = {node:1 for node in auth_scores.keys()}
             for node in self.graph.graph.nodes():
-                new_auth_scores[node] = sum(hub_scores[predecessor] for predecessor in self.graph.get_predecessors(node))
-
-            # Normalize authority scores
-            norm = sum(new_auth_scores.values())
-            for node in new_auth_scores:
-                new_auth_scores[node] /= norm
+                auth_scores[node] = sum(hub_scores[predecessor] for predecessor in self.graph.get_predecessors(node))
 
             # Update hub scores
-            new_hub_scores = {node:1 for node in hub_scores.keys()}
             for node in self.graph.graph.nodes():
-                new_hub_scores[node] = sum(auth_scores[successor] for successor in self.graph.get_successors(node))
+                hub_scores[node] = sum(auth_scores[successor] for successor in self.graph.get_successors(node))
+
+            # Normalize authority scores
+            norm = sum(auth_scores.values())
+            for node in auth_scores:
+                auth_scores[node] /= norm
 
             # Normalize hub scores
-            norm = sum(new_hub_scores.values())
-            for node in new_hub_scores:
-                new_hub_scores[node] /= norm
-
-            hub_scores = new_hub_scores
-            auth_scores = new_auth_scores
+            norm = sum(hub_scores.values())
+            for node in hub_scores:
+               hub_scores[node] /= norm
 
         sorted_auths = sorted(auth_scores.items(), key=lambda x: x[1], reverse=True)[:max_result]
         sorted_hubs = sorted(hub_scores.items(), key=lambda x: x[1], reverse=True)[:max_result]
-        top_auths = [node for node, _ in sorted_auths]
+        top_auths = [self.movie_id2name.get(node, node) for node, _ in sorted_auths]
         top_hubs = [self.movie_id2name.get(node, node) for node, _ in sorted_hubs]
-
-
 
         return top_auths, top_hubs
 
@@ -150,11 +143,11 @@ if __name__ == "__main__":
     with open(project_root + '/data/IMDB_Crawled.json', 'r') as file:
         data = json.load(file)
     corpus = data    # TODO: it shoud be your crawled data
-    root_set = data[:10]   # TODO: it shoud be a subset of your corpus
+    root_set = [movie for movie in data if "Avengers" in movie['title']]   # TODO: it shoud be a subset of your corpus
 
     analyzer = LinkAnalyzer(root_set=root_set)
     analyzer.expand_graph(corpus=corpus)
-    actors, movies = analyzer.hits(max_result=10, num_iteration=100)
+    movies, actors = analyzer.hits(max_result=10, num_iteration=100)
     print("Top Actors:")
     print(*actors, sep=' - ')
     print("Top Movies:")
@@ -162,6 +155,6 @@ if __name__ == "__main__":
 
 # Outputs:
 # Top Actors:
-# Robert De Niro - Al Pacino - Marlon Brando - Robert Duvall - Brad Pitt - Morgan Freeman - Edward Norton - James Caan - Jack Nicholson - Lee J. Cobb
+# Robert Downey Jr. - Chris Evans - Mark Ruffalo - Scarlett Johansson - Chris Hemsworth - Ralph Fiennes - Sean Connery - Uma Thurman - Patrick Macnee - Diana Rigg
 # Top Movies:
-# The Godfather Part II - Heat - The Irishman - Righteous Kill - The Score - Sleepers - The Comeback Trail - Goodfellas - Joker - Once Upon a Time in America
+# Avengers: Endgame - Avengers: Age of Ultron - The Avengers - Captain America: Civil War - Avengers: Infinity War - Zodiac - Captain America: The Winter Soldier - Iron Man - Spider-Man: Homecoming - Iron Man 3
