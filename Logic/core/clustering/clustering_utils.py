@@ -414,7 +414,7 @@ class ClusteringUtils:
             for _ in range(100):
                 _, _, temp = self.cluster_kmeans_WCSS(embeddings, k)
                 wcss += temp
-            wcss /= 20
+            wcss /= 100
             wcss_values.append(wcss)
 
 

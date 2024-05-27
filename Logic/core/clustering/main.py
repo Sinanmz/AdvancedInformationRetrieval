@@ -43,7 +43,7 @@ crawled_path = project_root+'/data/IMDB_Crawled.json'
 with open(crawled_path, 'r') as f:
     data = json.load(f)
 
-num_samples = 10000
+num_samples = 100
 
 movie_titles = []
 movie_embeddings = []
@@ -71,7 +71,7 @@ embeddings = np.array(movie_embeddings)
 #     - Find the Singular Values and use the explained_variance_ratio_ attribute to determine the percentage of variance explained by each principal component.
 #     - Draw plots to visualize the results.
 dimension_reduction = DimensionReduction()
-reduced_embeddings = dimension_reduction.pca_reduce_dimension(embeddings, n_components=2)
+reduced_embeddings = dimension_reduction.pca_reduce_dimension(embeddings, n_components=10)
 dimension_reduction.wandb_plot_explained_variance_by_components(embeddings, project_name=f'MIR_Clustering_{num_samples}', run_name='Explained Variance')
 for i, explained_variance in enumerate(dimension_reduction.pca.explained_variance_ratio_):
     print(f"Explained Variance for Component {i+1}: {explained_variance}")
