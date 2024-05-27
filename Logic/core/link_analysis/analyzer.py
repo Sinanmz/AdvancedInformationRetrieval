@@ -133,8 +133,8 @@ class LinkAnalyzer:
 
         sorted_auths = sorted(auth_scores.items(), key=lambda x: x[1], reverse=True)[:max_result]
         sorted_hubs = sorted(hub_scores.items(), key=lambda x: x[1], reverse=True)[:max_result]
-        top_auths = [self.movie_id2name.get(node, node) for node, _ in sorted_auths]
-        top_hubs = [self.movie_id2name.get(node, node) for node, _ in sorted_hubs]
+        top_auths = [node for node, _ in sorted_auths]
+        top_hubs = [node for node, _ in sorted_hubs]
 
         return top_auths, top_hubs
 
@@ -148,6 +148,8 @@ if __name__ == "__main__":
     analyzer = LinkAnalyzer(root_set=root_set)
     analyzer.expand_graph(corpus=corpus)
     movies, actors = analyzer.hits(max_result=10, num_iteration=100)
+    movies = [analyzer.movie_id2name[movie] for movie in movies]
+    actors = [actor for actor in actors if actor in analyzer.stars]
     print("Top Actors:")
     print(*actors, sep=' - ')
     print("Top Movies:")
