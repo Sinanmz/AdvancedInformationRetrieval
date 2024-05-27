@@ -43,7 +43,7 @@ crawled_path = project_root+'/data/IMDB_Crawled.json'
 with open(crawled_path, 'r') as f:
     data = json.load(f)
 
-num_samples = 100
+num_samples = 1000
 
 movie_titles = []
 movie_embeddings = []
@@ -62,8 +62,8 @@ genre2idx = {genre: idx for idx, genre in enumerate(set(movie_genres))}
 idx2genre = {idx: genre for genre, idx in genre2idx.items()}
 movie_genres_ids = [genre2idx[genre] for genre in movie_genres]
 
+
 embeddings = np.array(movie_embeddings)
-# print(embeddings)
 
 # 1. Dimension Reduction
 # TODO: Perform Principal Component Analysis (PCA):
@@ -71,16 +71,19 @@ embeddings = np.array(movie_embeddings)
 #     - Find the Singular Values and use the explained_variance_ratio_ attribute to determine the percentage of variance explained by each principal component.
 #     - Draw plots to visualize the results.
 dimension_reduction = DimensionReduction()
-reduced_embeddings = dimension_reduction.pca_reduce_dimension(embeddings, n_components=10)
+reduced_embeddings = dimension_reduction.pca_reduce_dimension(embeddings, n_components=100)
 dimension_reduction.wandb_plot_explained_variance_by_components(embeddings, project_name=f'MIR_Clustering_{num_samples}', run_name='Explained Variance')
 for i, explained_variance in enumerate(dimension_reduction.pca.explained_variance_ratio_):
     print(f"Explained Variance for Component {i+1}: {explained_variance}")
     print(f"Singluar Value for Component {i+1}: {dimension_reduction.pca.singular_values_[i]}")
 
+if num_samples > 100:
+    embeddings = reduced_embeddings
+
 # TODO: Implement t-SNE (t-Distributed Stochastic Neighbor Embedding):
 #     - Create the convert_to_2d_tsne function, which takes a list of embedding vectors as input and reduces the dimensionality to two dimensions using the t-SNE method.
 #     - Use the output vectors from this step to draw the diagram.
-# dimension_reduction.wandb_plot_2d_tsne(embeddings, project_name=f'Clustering_{num_samples}', run_name='2D t-SNE')
+dimension_reduction.wandb_plot_2d_tsne(embeddings, project_name=f'MIR_Clustering_{num_samples}', run_name='2D t-SNE')
 
 # 2. Clustering
 ## K-Means Clustering
@@ -141,13 +144,13 @@ adjusted_rand_scores = []
 linkage_methods = ['ward', 'complete', 'average', 'single']
 for method in linkage_methods:
     if method == 'ward':
-        cluster_labels = ClusteringUtils().cluster_hierarchical_ward(embeddings)
+        cluster_labels = ClusteringUtils().cluster_hierarchical_ward(embeddings, n_clusters=len(set(movie_genres_ids)))
     elif method == 'complete':
-        cluster_labels = ClusteringUtils().cluster_hierarchical_complete(embeddings)
+        cluster_labels = ClusteringUtils().cluster_hierarchical_complete(embeddings, n_clusters=len(set(movie_genres_ids)))
     elif method == 'average':
-        cluster_labels = ClusteringUtils().cluster_hierarchical_average(embeddings)
+        cluster_labels = ClusteringUtils().cluster_hierarchical_average(embeddings, n_clusters=len(set(movie_genres_ids)))
     elif method == 'single':
-        cluster_labels = ClusteringUtils().cluster_hierarchical_single(embeddings)
+        cluster_labels = ClusteringUtils().cluster_hierarchical_single(embeddings, n_clusters=len(set(movie_genres_ids)))
         
     silhouette_score = ClusteringMetrics().silhouette_score(embeddings, cluster_labels)
     purity_score = ClusteringMetrics().purity_score(movie_genres_ids, cluster_labels)

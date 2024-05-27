@@ -128,7 +128,7 @@ class ClusteringUtils:
 
         return cluster_centers, cluster_indices, wcss
 
-    def cluster_hierarchical_single(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
+    def cluster_hierarchical_single(self, emb_vecs: List, n_clusters=None, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with single linkage.
 
@@ -142,11 +142,13 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
+        if distance_threshold is None and n_clusters is None:
+            n_clusters = 10
         hierarchical = AgglomerativeClustering(linkage='single', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
-    def cluster_hierarchical_complete(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
+    def cluster_hierarchical_complete(self, emb_vecs: List, n_clusters=None, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with complete linkage.
 
@@ -160,11 +162,13 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
+        if distance_threshold is None and n_clusters is None:
+            n_clusters = 10
         hierarchical = AgglomerativeClustering(linkage='complete', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
-    def cluster_hierarchical_average(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
+    def cluster_hierarchical_average(self, emb_vecs: List, n_clusters=None, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with average linkage.
 
@@ -178,11 +182,13 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
+        if distance_threshold is None and n_clusters is None:
+            n_clusters = 10
         hierarchical = AgglomerativeClustering(linkage='average', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
 
-    def cluster_hierarchical_ward(self, emb_vecs: List, n_clusters=10, distance_threshold=None) -> List:
+    def cluster_hierarchical_ward(self, emb_vecs: List, n_clusters=None, distance_threshold=None) -> List:
         """
         Clusters input vectors using the hierarchical clustering method with Ward's method.
 
@@ -196,6 +202,8 @@ class ClusteringUtils:
         List
             A list containing the cluster index for each input vector.
         """
+        if distance_threshold is None and n_clusters is None:
+            n_clusters = 10
         hierarchical = AgglomerativeClustering(linkage='ward', n_clusters=n_clusters, distance_threshold=distance_threshold)
         cluster_indices = hierarchical.fit_predict(emb_vecs)
         return cluster_indices
@@ -411,10 +419,10 @@ class ClusteringUtils:
         for k in k_values:
             # TODO
             wcss = 0
-            for _ in range(100):
+            for _ in range(25):
                 _, _, temp = self.cluster_kmeans_WCSS(embeddings, k)
                 wcss += temp
-            wcss /= 100
+            wcss /= 25
             wcss_values.append(wcss)
 
 
