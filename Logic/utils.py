@@ -10,6 +10,7 @@ from Logic.core.search import SearchEngine
 from Logic.core.utility.spell_correction import SpellCorrection
 from Logic.core.utility.snippet import Snippet
 from Logic.core.indexer.indexes_enum import Indexes, Index_types
+from Logic.core.utility.preprocess import Preprocessor
 
 
 from typing import Dict, List
@@ -22,14 +23,59 @@ with open(data_path, 'r') as f:
 
 movies_dataset = {}
 for movie in data:
-    temp = {'title': movie['title'], 'first_page_summary': movie['first_page_summary'], 
-            'URL': 'placeholder', 'stars': movie['stars'], 
-            'genres': movie['genres'], 'id': movie['id'],
-            'directors': movie['directors'], 'summaries': movie['summaries'],
-            'writers': movie['writers'], 'reviews': movie['reviews'], 'synopsis': movie['synposis'], 'Image_URL': None,
+    temp = {'title': movie['title'] if movie['title'] else '', 
+            'first_page_summary': movie['first_page_summary'] if movie['first_page_summary'] else '', 
+            'URL': f"https://www.imdb.com/title/{movie['id']}", 
+            'stars': movie['stars'] if movie['stars'] else [], 
+            'genres': movie['genres'] if movie['genres'] else [], 
+            'id': movie['id'] if movie['id'] else '',
+            'directors': movie['directors'] if movie['directors'] else [], 
+            'summaries': movie['summaries'] if movie['summaries'] else [],
+            'writers': movie['writers'] if movie['writers'] else [], 
+            'reviews': movie['reviews'] if movie['reviews'] else [], 
+            'synopsis': movie['synposis'] if movie['synposis'] else [], 
+            'Image_URL': 'https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg',
             }
     movies_dataset[movie['id']] = temp
 search_engine = SearchEngine()
+
+
+preprocessor = Preprocessor([])
+all_documents = []
+for movie in movies_dataset.values():
+    if movie["title"]:
+        all_documents.append(movie["title"])
+
+    # all_documents.extend(movie["stars"])
+    if movie["stars"]:
+        for star in movie["stars"]:
+            if star:
+                all_documents.append(preprocessor.normalize(star))
+    if movie["genres"]:
+        all_documents.extend(movie["genres"])
+
+    # all_documents.extend(movie["directors"])
+    # if movie["directors"]:
+    #     for director in movie["directors"]:
+    #         if director:
+    #             all_documents.append(preprocessor.normalize(director))
+    
+    if movie["summaries"]:
+        all_documents.extend(movie["summaries"][:5])
+
+    # all_documents.extend(movie["writers"])
+    # if movie["writers"]:
+    #     for writer in movie["writers"]:
+    #         if writer:
+    #             all_documents.append(preprocessor.normalize(writer))
+
+    # if movie["synopsis"]:
+    #     all_documents.extend(movie["synopsis"][:5])
+
+    # if movie["reviews"]:
+    #     for review in movie["reviews"][:5]:
+    #         if review:
+    #             all_documents.append(review[0])
 
 
 def correct_text(text: str, all_documents: List[str]) -> str:
@@ -150,5 +196,4 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
     # )
     # return result
     movie = movies_dataset.get(id)
-    movie['URL'] = f"https://www.imdb.com/title/{id}"
     return movie

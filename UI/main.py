@@ -16,10 +16,10 @@ import random
 from Logic.core.utility.snippet import Snippet
 from Logic.core.link_analysis.analyzer import LinkAnalyzer
 from Logic.core.indexer.index_reader import Index_reader, Indexes
-from Logic.core.utility.preprocess import Preprocessor
 
 
 import re
+import json
 
 snippet_obj = Snippet()
 
@@ -35,24 +35,40 @@ class color(Enum):
 
 
 def get_top_x_movies_by_rank(x: int, results: list):
-    path = "../Logic/core/index/"  # Link to the index folder
-    document_index = Index_reader(path, Indexes.DOCUMENTS)
-    corpus = []
-    root_set = []
-    for movie_id, movie_detail in document_index.index.items():
-        movie_title = movie_detail["title"]
-        stars = movie_detail["stars"]
-        corpus.append({"id": movie_id, "title": movie_title, "stars": stars})
+    # path = project_root+'/index/' # Link to the index folder
+    # document_index = Index_reader(path, Indexes.DOCUMENTS)
+    # corpus = []
+    # root_set = []
+    # for movie_id, movie_detail in document_index.index.items():
+    #     movie_title = movie_detail["title"]
+    #     stars = movie_detail["stars"]
+    #     corpus.append({"id": movie_id, "title": movie_title, "stars": stars})
 
-    for element in results:
-        movie_id = element[0]
-        movie_detail = document_index.index[movie_id]
-        movie_title = movie_detail["title"]
-        stars = movie_detail["stars"]
-        root_set.append({"id": movie_id, "title": movie_title, "stars": stars})
+    # for element in results:
+    #     movie_id = element[0]
+    #     movie_detail = document_index.index[movie_id]
+    #     movie_title = movie_detail["title"]
+    #     stars = movie_detail["stars"]
+    #     root_set.append({"id": movie_id, "title": movie_title, "stars": stars})
+
+    crawled_path = project_root + "/data/IMDB_Crawled.json"
+    with open(crawled_path, "r") as f:
+        data = json.load(f)
+    root_set = []
+    corpus = []
+    root_ids = [element[0] for element in results]
+    for movie in data:
+        if movie['id'] and movie['title']:
+            id = movie['id']
+            title = movie['title']
+            stars = movie['stars'] if movie['stars'] else []
+            corpus.append({"id": id, "title": title, "stars": stars})
+            if id in root_ids:
+                root_set.append({"id": id, "title": title, "stars": stars})
+
     analyzer = LinkAnalyzer(root_set=root_set)
     analyzer.expand_graph(corpus=corpus)
-    actors, movies = analyzer.hits(max_result=x)
+    movies, actors = analyzer.hits(max_result=x)
     return actors, movies
 
 
@@ -134,47 +150,12 @@ def search_handling(
     filter_button,
     num_filter_results,
 ):
-    preprocessor = Preprocessor([])
-    all_documents = []
-    for movie in utils.movies_dataset.values():
-        if movie["title"]:
-            all_documents.append(movie["title"])
-
-        # all_documents.extend(movie["stars"])
-        if movie["stars"]:
-            for star in movie["stars"]:
-                if star:
-                    all_documents.append(preprocessor.normalize(star))
-        if movie["genres"]:
-            all_documents.extend(movie["genres"])
-
-        # all_documents.extend(movie["directors"])
-        # if movie["directors"]:
-        #     for director in movie["directors"]:
-        #         if director:
-        #             all_documents.append(preprocessor.normalize(director))
-        
-        if movie["summaries"]:
-            all_documents.extend(movie["summaries"][:5])
-
-        # all_documents.extend(movie["writers"])
-        # if movie["writers"]:
-        #     for writer in movie["writers"]:
-        #         if writer:
-        #             all_documents.append(preprocessor.normalize(writer))
-
-        if movie["synopsis"]:
-            all_documents.extend(movie["synopsis"][:5])
-
-        if movie["reviews"]:
-            for review in movie["reviews"][:5]:
-                if review:
-                    all_documents.append(review[0])
     if filter_button:
         if "search_results" in st.session_state:
             top_actors, top_movies = get_top_x_movies_by_rank(
                 num_filter_results, st.session_state["search_results"]
             )
+            print(top_actors)
             st.markdown(f"**Top {num_filter_results} Actors:**")
             actors_ = ", ".join(top_actors)
             st.markdown(
@@ -223,7 +204,7 @@ def search_handling(
         return
 
     if search_button:
-        corrected_query = utils.correct_text(search_term, all_documents)
+        corrected_query = utils.correct_text(search_term, utils.all_documents)
 
         if corrected_query != search_term:
             st.warning(f"Your search terms were corrected to: {corrected_query}")
@@ -232,7 +213,6 @@ def search_handling(
         with st.spinner("Searching..."):
             time.sleep(0.5)  # for showing the spinner! (can be removed)
             start_time = time.time()
-
             result = utils.search(
                 search_term,
                 search_max_num,
@@ -256,14 +236,8 @@ def search_handling(
             card = st.columns([3, 1])
             info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
             with card[0].container():
-                if info["title"]:
-                    st.title(info["title"])
-                else:
-                    st.title("Title not found")
-                if info["URL"]:
-                    st.markdown(f"[Link to movie]({info['URL']})")
-                else:
-                    st.write("URL not found")
+                st.title(info["title"])
+                st.markdown(f"[Link to movie]({info['URL']})")
                 st.write(f"Relevance Score: {result[i][1]}")
                 st.markdown(
                     f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
@@ -272,33 +246,27 @@ def search_handling(
 
             with st.container():
                 st.markdown("**Directors:**")
-                num_authors = len(info["directors"]) if info["directors"] else 0
+                num_authors = len(info["directors"])
                 for j in range(num_authors):
                     st.text(info["directors"][j])
 
             with st.container():
                 st.markdown("**Stars:**")
-                num_authors = len(info["stars"]) if info["stars"] else 0
-                if info['stars']:
-                    stars = "".join(star + ", " for star in info["stars"])
-                    st.text(stars[:-2])
-                else:
-                    st.text("Stars not found")
+                num_authors = len(info["stars"])
+                stars = "".join(star + ", " for star in info["stars"])
+                st.text(stars[:-2])
 
                 topic_card = st.columns(1)
                 with topic_card[0].container():
                     st.write("Genres:")
-                    num_topics = len(info["genres"]) if info["genres"] else 0
+                    num_topics = len(info["genres"])
                     for j in range(num_topics):
                         st.markdown(
                             f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
                             unsafe_allow_html=True,
                         )
             with card[1].container():
-                if info["Image_URL"]:
-                    st.image(info["Image_URL"], use_column_width=True)
-                # else:
-                    # st.write("Image not found")
+                st.image(info["Image_URL"], use_column_width=True)
 
             st.divider()
 
@@ -352,7 +320,7 @@ def main():
 
         search_weights = [weight_stars, weight_genres, weight_summary]
         search_method = st.selectbox(
-            "Search method", ("ltn.lnn", "ltc.lnc", "OkapiBM25", "unigram")
+            "Search method", ("OkapiBM25", "ltn.lnn", "ltc.lnc", "unigram")
         )
 
         unigram_smoothing = None
@@ -391,6 +359,7 @@ def main():
 
     search_button = st.button("Search!")
     filter_button = st.button("Filter movies by ranking")
+
     search_handling(
         search_button,
         search_term,
