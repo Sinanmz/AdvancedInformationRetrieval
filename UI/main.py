@@ -206,7 +206,7 @@ def search_handling(
     if search_button:
         corrected_query = utils.correct_text(search_term, utils.all_documents)
 
-        if corrected_query != search_term:
+        if corrected_query.strip() != search_term.strip():
             st.warning(f"Your search terms were corrected to: {corrected_query}")
             search_term = corrected_query
 

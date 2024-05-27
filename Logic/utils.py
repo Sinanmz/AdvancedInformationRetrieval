@@ -46,7 +46,6 @@ for movie in movies_dataset.values():
     if movie["title"]:
         all_documents.append(movie["title"])
 
-    # all_documents.extend(movie["stars"])
     if movie["stars"]:
         for star in movie["stars"]:
             if star:
@@ -54,28 +53,26 @@ for movie in movies_dataset.values():
     if movie["genres"]:
         all_documents.extend(movie["genres"])
 
-    # all_documents.extend(movie["directors"])
-    # if movie["directors"]:
-    #     for director in movie["directors"]:
-    #         if director:
-    #             all_documents.append(preprocessor.normalize(director))
+    if movie["directors"]:
+        for director in movie["directors"]:
+            if director:
+                all_documents.append(preprocessor.normalize(director))
     
     if movie["summaries"]:
-        all_documents.extend(movie["summaries"][:5])
+        all_documents.extend(movie["summaries"])
 
-    # all_documents.extend(movie["writers"])
-    # if movie["writers"]:
-    #     for writer in movie["writers"]:
-    #         if writer:
-    #             all_documents.append(preprocessor.normalize(writer))
+    if movie["writers"]:
+        for writer in movie["writers"]:
+            if writer:
+                all_documents.append(preprocessor.normalize(writer))
 
-    # if movie["synopsis"]:
-    #     all_documents.extend(movie["synopsis"][:5])
+    if movie["synopsis"]:
+        all_documents.extend(movie["synopsis"])
 
-    # if movie["reviews"]:
-    #     for review in movie["reviews"][:5]:
-    #         if review:
-    #             all_documents.append(review[0])
+    if movie["reviews"]:
+        for review in movie["reviews"][:2]:
+            if review:
+                all_documents.append(review[0])
 
 
 def correct_text(text: str, all_documents: List[str]) -> str:
