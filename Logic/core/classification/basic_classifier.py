@@ -16,7 +16,7 @@ from Logic.core.word_embedding.fasttext_model import FastText
 
 class BasicClassifier:
     def __init__(self):
-        raise NotImplementedError()
+        pass
 
     def fit(self, x, y):
         raise NotImplementedError()
