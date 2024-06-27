@@ -150,6 +150,8 @@ def search_handling(
     filter_button,
     num_filter_results,
 ):
+    imdb_logo_url = "https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg"
+
     if filter_button:
         if "search_results" in st.session_state:
             top_actors, top_movies = get_top_x_movies_by_rank(
@@ -172,73 +174,9 @@ def search_handling(
                 st.title(info["title"])
                 st.markdown(f"[Link to movie]({info['URL']})")
                 st.markdown(
-                    f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
+                    f"**Average Rating:** {info['average_rating']} <img src='{imdb_logo_url}' width='40' height='40'/>",
                     unsafe_allow_html=True,
                 )
-
-            with st.container():
-                st.markdown("**Directors:**")
-                num_authors = len(info["directors"])
-                for j in range(num_authors):
-                    st.text(info["directors"][j])
-
-            with st.container():
-                st.markdown("**Stars:**")
-                num_authors = len(info["stars"])
-                stars = "".join(star + ", " for star in info["stars"])
-                st.text(stars[:-2])
-
-                topic_card = st.columns(1)
-                with topic_card[0].container():
-                    st.write("Genres:")
-                    num_topics = len(info["genres"])
-                    for j in range(num_topics):
-                        st.markdown(
-                            f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
-                            unsafe_allow_html=True,
-                        )
-            with card[1].container():
-                st.image(info["Image_URL"], use_column_width=True)
-
-            st.divider()
-        return
-
-    if search_button:
-        corrected_query = utils.correct_text(search_term, utils.all_documents)
-
-        if corrected_query.strip() != search_term.strip():
-            st.warning(f"Your search terms were corrected to: {corrected_query}")
-            search_term = corrected_query
-
-        with st.spinner("Searching..."):
-            time.sleep(0.5)  # for showing the spinner! (can be removed)
-            start_time = time.time()
-            result = utils.search(
-                search_term,
-                search_max_num,
-                search_method,
-                search_weights,
-                smoothing_method = unigram_smoothing,
-                alpha=alpha,
-                lamda=lamda,
-            )
-            if "search_results" in st.session_state:
-                st.session_state["search_results"] = result
-            print(f"Result: {result}")
-            end_time = time.time()
-            if len(result) == 0:
-                st.warning("No results found!")
-                return
-
-            search_time(start_time, end_time)
-
-        for i in range(len(result)):
-            card = st.columns([3, 1])
-            info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
-            with card[0].container():
-                st.title(info["title"])
-                st.markdown(f"[Link to movie]({info['URL']})")
-                st.write(f"Relevance Score: {result[i][1]}")
                 st.markdown(
                     f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
                     unsafe_allow_html=True,
@@ -269,6 +207,143 @@ def search_handling(
                 st.image(info["Image_URL"], use_column_width=True)
 
             st.divider()
+
+
+            # Add reviews in a dropdown
+            with st.expander("Reviews"):
+                for review, score in info['reviews'][:5]:
+                    st.write(f"**Review:** {review}")
+                    st.write(f"**Rating:** {score}")
+                    st.divider()
+
+
+            with st.expander("Related Movies"):
+                related_movies = info['related_movies']
+                related_movie_infos = [utils.get_movie_by_id(movie_id, utils.movies_dataset) for movie_id in related_movies]
+                related_movie_infos = [movie for movie in related_movie_infos if movie]
+                related_movie_infos = related_movie_infos[:5]
+                for related_movie_info in related_movie_infos:
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <div style="flex: 1; text-align: left;">
+                            <p style="margin: 0; font-weight: bold;">{related_movie_info['title']}</p>
+                            <p style="margin: 5px 0;">
+                                Rating: {related_movie_info['average_rating']} 
+                                <img src="{imdb_logo_url}" width="20" style="vertical-align: middle;"/>
+                            </p>
+                            <a href="{related_movie_info['URL']}" target="_blank">Link to movie</a>
+                        </div>
+                        <div style="flex: 0 0 100px; text-align: right;">
+                            <img src="{related_movie_info['Image_URL']}" width="100" style="display: block;"/>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            st.divider()
+
+
+        return
+
+    if search_button:
+        corrected_query = utils.correct_text(search_term, utils.all_documents)
+
+        if corrected_query.strip() != search_term.strip():
+            st.warning(f"Your search terms were corrected to: {corrected_query}")
+            search_term = corrected_query
+
+        with st.spinner("Searching..."):
+            time.sleep(0.5)  # for showing the spinner! (can be removed)
+            start_time = time.time()
+            result = utils.search(
+                search_term,
+                search_max_num,
+                search_method,
+                search_weights,
+                unigram_smoothing = unigram_smoothing,
+                alpha=alpha,
+                lamda=lamda,
+            )
+            if "search_results" in st.session_state:
+                st.session_state["search_results"] = result
+            print(f"Result: {result}")
+            end_time = time.time()
+            if len(result) == 0:
+                st.warning("No results found!")
+                return
+
+            search_time(start_time, end_time)
+
+        for i in range(len(result)):
+            card = st.columns([3, 1])
+            info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
+            with card[0].container():
+                st.title(info["title"])
+                st.markdown(f"[Link to movie]({info['URL']})")
+                st.write(f"Relevance Score: {result[i][1]}")
+                st.markdown(
+                    f"**Average Rating:** {info['average_rating']} <img src='{imdb_logo_url}' width='40' height='40'/>",
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f"<b><font size = '4'>Summary:</font></b> {get_summary_with_snippet(info, search_term)}",
+                    unsafe_allow_html=True,
+                )
+
+            with st.container():
+                st.markdown("**Directors:**")
+                num_authors = len(info["directors"])
+                for j in range(num_authors):
+                    st.text(info["directors"][j])
+
+            with st.container():
+                st.markdown("**Stars:**")
+                num_authors = len(info["stars"])
+                stars = "".join(star + ", " for star in info["stars"])
+                st.text(stars[:-2])
+
+                topic_card = st.columns(1)
+                with topic_card[0].container():
+                    st.write("Genres:")
+                    num_topics = len(info["genres"])
+                    for j in range(num_topics):
+                        st.markdown(
+                            f"<span style='color:{random.choice(list(color)).value}'>{info['genres'][j]}</span>",
+                            unsafe_allow_html=True,
+                        )
+            with card[1].container():
+                st.image(info["Image_URL"], use_column_width=True)
+
+
+            with st.expander("Reviews"):
+                for review, score in info['reviews'][:5]:
+                    st.write(f"**Review:** {review}")
+                    st.write(f"**Rating:** {score}")
+                    st.divider()
+
+
+            with st.expander("Related Movies"):
+                related_movies = info['related_movies']
+                related_movie_infos = [utils.get_movie_by_id(movie_id, utils.movies_dataset) for movie_id in related_movies]
+                related_movie_infos = [movie for movie in related_movie_infos if movie]
+                related_movie_infos = related_movie_infos[:5]
+                for related_movie_info in related_movie_infos:
+                    st.markdown(f"""
+                    <div style="display: flex; align-items: center; margin-bottom: 20px;">
+                        <div style="flex: 1; text-align: left;">
+                            <p style="margin: 0; font-weight: bold;">{related_movie_info['title']}</p>
+                            <p style="margin: 5px 0;">
+                                Rating: {related_movie_info['average_rating']} 
+                                <img src="{imdb_logo_url}" width="20" style="vertical-align: middle;"/>
+                            </p>
+                            <a href="{related_movie_info['URL']}" target="_blank">Link to movie</a>
+                        </div>
+                        <div style="flex: 0 0 100px; text-align: right;">
+                            <img src="{related_movie_info['Image_URL']}" width="100" style="display: block;"/>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+            st.divider()
+            
 
         st.session_state["search_results"] = result
         if "filter_state" in st.session_state:
