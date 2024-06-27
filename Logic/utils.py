@@ -17,62 +17,82 @@ from typing import Dict, List
 import json
 
 
-data_path = project_root + '/data/IMDB_Crawled.json'
-with open(data_path, 'r') as f:
-    data = json.load(f)
+if os.path.exists(project_root + '/data/movies_by_id.json'):
+    with open(project_root + '/data/movies_by_id.json', 'r') as f:
+        movies_dataset = json.load(f)
+else:
+    data_path = project_root + '/data/IMDB_Crawled.json'
+    with open(data_path, 'r') as f:
+        data = json.load(f)
+    movies_dataset = {}
+    for movie in data:
+        temp = {'title': movie['title'] if movie['title'] else '', 
+                'first_page_summary': movie['first_page_summary'] if movie['first_page_summary'] else '', 
+                'URL': f"https://www.imdb.com/title/{movie['id']}", 
+                'stars': movie['stars'] if movie['stars'] else [], 
+                'genres': movie['genres'] if movie['genres'] else [], 
+                'id': movie['id'] if movie['id'] else '',
+                'directors': movie['directors'] if movie['directors'] else [], 
+                'summaries': movie['summaries'] if movie['summaries'] else [],
+                'writers': movie['writers'] if movie['writers'] else [], 
+                'reviews': movie['reviews'] if movie['reviews'] else [], 
+                'synopsis': movie['synposis'] if movie['synposis'] else [], 
+                'average_rating': movie['rating'] if movie['rating'] else '',
+                'related_movies': [],
+                'Image_URL': 'https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg',
+                }
+        if movie['related_links']:
+            for rel in movie['related_links']:
+                idx1 = rel.find('title/')
+                rel = rel[idx1+len('title/'):]
+                idx2 = rel.find('/')
+                rel = rel[:idx2]
+                temp['related_movies'].append(rel)
+        movies_dataset[movie['id']] = temp
+    with open(project_root + '/data/movies_by_id.json', 'w') as f:
+        json.dump(movies_dataset, f)
 
-movies_dataset = {}
-for movie in data:
-    temp = {'title': movie['title'] if movie['title'] else '', 
-            'first_page_summary': movie['first_page_summary'] if movie['first_page_summary'] else '', 
-            'URL': f"https://www.imdb.com/title/{movie['id']}", 
-            'stars': movie['stars'] if movie['stars'] else [], 
-            'genres': movie['genres'] if movie['genres'] else [], 
-            'id': movie['id'] if movie['id'] else '',
-            'directors': movie['directors'] if movie['directors'] else [], 
-            'summaries': movie['summaries'] if movie['summaries'] else [],
-            'writers': movie['writers'] if movie['writers'] else [], 
-            'reviews': movie['reviews'] if movie['reviews'] else [], 
-            'synopsis': movie['synposis'] if movie['synposis'] else [], 
-            'Image_URL': 'https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg',
-            }
-    movies_dataset[movie['id']] = temp
 search_engine = SearchEngine()
 
+if os.path.exists(project_root + '/data/spell_correction_texts.json'):
+    with open(project_root + '/data/spell_correction_texts.json', 'r') as f:
+        all_documents = json.load(f)
+else:
+    preprocessor = Preprocessor([])
+    all_documents = []
+    for movie in movies_dataset.values():
+        if movie["title"]:
+            all_documents.append(movie["title"])
 
-preprocessor = Preprocessor([])
-all_documents = []
-for movie in movies_dataset.values():
-    if movie["title"]:
-        all_documents.append(movie["title"])
+        if movie["stars"]:
+            for star in movie["stars"]:
+                if star:
+                    all_documents.append(preprocessor.normalize(star))
+        if movie["genres"]:
+            all_documents.extend(movie["genres"])
 
-    if movie["stars"]:
-        for star in movie["stars"]:
-            if star:
-                all_documents.append(preprocessor.normalize(star))
-    if movie["genres"]:
-        all_documents.extend(movie["genres"])
+        if movie["directors"]:
+            for director in movie["directors"]:
+                if director:
+                    all_documents.append(preprocessor.normalize(director))
+        
+        if movie["summaries"]:
+            all_documents.extend(movie["summaries"])
 
-    if movie["directors"]:
-        for director in movie["directors"]:
-            if director:
-                all_documents.append(preprocessor.normalize(director))
-    
-    if movie["summaries"]:
-        all_documents.extend(movie["summaries"])
+        if movie["writers"]:
+            for writer in movie["writers"]:
+                if writer:
+                    all_documents.append(preprocessor.normalize(writer))
 
-    if movie["writers"]:
-        for writer in movie["writers"]:
-            if writer:
-                all_documents.append(preprocessor.normalize(writer))
+        if movie["synopsis"]:
+            all_documents.extend(movie["synopsis"])
 
-    if movie["synopsis"]:
-        all_documents.extend(movie["synopsis"])
-
-    if movie["reviews"]:
-        for review in movie["reviews"][:2]:
-            if review:
-                all_documents.append(review[0])
+        if movie["reviews"]:
+            for review in movie["reviews"][:2]:
+                if review:
+                    all_documents.append(review[0])
+    with open(project_root + '/data/spell_correction_texts.json', 'w') as f:
+        json.dump(all_documents, f)
 
 
 def correct_text(text: str, all_documents: List[str]) -> str:
