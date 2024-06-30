@@ -254,6 +254,8 @@ def search_handling(
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+                    st.divider()
+
 
             st.divider()
 
@@ -372,6 +374,8 @@ def search_handling(
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+                    st.divider()
+
 
             st.divider()
             
