@@ -24,6 +24,16 @@ import json
 snippet_obj = Snippet()
 
 
+from langchain.vectorstores.utils import DistanceStrategy
+import pickle
+
+with open(project_root+"/data/vectorstore.pkl", "rb") as f:
+    vectorstore = pickle.load(f)
+
+# load the retriever from the vectorstore
+retriever = vectorstore.as_retriever(search_kwargs={"k": 100, 'distance_strategy': DistanceStrategy.COSINE})
+
+
 class color(Enum):
     RED = "#FF0000"
     GREEN = "#00FF00"
@@ -149,6 +159,7 @@ def search_handling(
     lamda,
     filter_button,
     num_filter_results,
+    spell_correction,
 ):
     imdb_logo_url = "https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg"
 
@@ -211,10 +222,11 @@ def search_handling(
 
             # Add reviews in a dropdown
             with st.expander("Reviews"):
-                for review, score in info['reviews'][:5]:
+                for review, score in info['reviews'][:3]:
                     st.write(f"**Review:** {review}")
                     st.write(f"**Rating:** {score}")
                     st.divider()
+
 
 
             with st.expander("Related Movies"):
@@ -223,13 +235,17 @@ def search_handling(
                 related_movie_infos = [movie for movie in related_movie_infos if movie]
                 related_movie_infos = related_movie_infos[:5]
                 for related_movie_info in related_movie_infos:
+                    genres = ", ".join(related_movie_info["genres"])
                     st.markdown(f"""
                     <div style="display: flex; align-items: center; margin-bottom: 20px;">
                         <div style="flex: 1; text-align: left;">
                             <p style="margin: 0; font-weight: bold;">{related_movie_info['title']}</p>
                             <p style="margin: 5px 0;">
-                                Rating: {related_movie_info['average_rating']} 
+                                Average Rating: {related_movie_info['average_rating']} 
                                 <img src="{imdb_logo_url}" width="20" style="vertical-align: middle;"/>
+                            </p>
+                            <p style="margin: 5px 0;">
+                                Genres: {genres}
                             </p>
                             <a href="{related_movie_info['URL']}" target="_blank">Link to movie</a>
                         </div>
@@ -238,30 +254,38 @@ def search_handling(
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+
             st.divider()
 
 
         return
 
     if search_button:
-        corrected_query = utils.correct_text(search_term, utils.all_documents)
+        if spell_correction:
+            corrected_query = utils.correct_text(search_term, utils.all_documents)
+        else:
+            corrected_query = search_term
 
         if corrected_query.strip() != search_term.strip():
             st.warning(f"Your search terms were corrected to: {corrected_query}")
             search_term = corrected_query
 
         with st.spinner("Searching..."):
-            time.sleep(0.5)  # for showing the spinner! (can be removed)
+            # time.sleep(0.5)  # for showing the spinner! (can be removed)
             start_time = time.time()
-            result = utils.search(
-                search_term,
-                search_max_num,
-                search_method,
-                search_weights,
-                unigram_smoothing = unigram_smoothing,
-                alpha=alpha,
-                lamda=lamda,
-            )
+            if search_method == "RAG retriever":
+                result = retriever.get_relevant_documents(search_term)[:search_max_num]
+                result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result)]
+            else:
+                result = utils.search(
+                    search_term,
+                    search_max_num,
+                    search_method,
+                    search_weights,
+                    unigram_smoothing = unigram_smoothing,
+                    alpha=alpha,
+                    lamda=lamda,
+                )
             if "search_results" in st.session_state:
                 st.session_state["search_results"] = result
             print(f"Result: {result}")
@@ -278,7 +302,10 @@ def search_handling(
             with card[0].container():
                 st.title(info["title"])
                 st.markdown(f"[Link to movie]({info['URL']})")
-                st.write(f"Relevance Score: {result[i][1]}")
+                if search_method == "RAG retriever":
+                    st.write(f"Rank of Retrieval: {result[i][1] + 1}")
+                else:
+                    st.write(f"Relevance Score: {result[i][1]}")
                 st.markdown(
                     f"**Average Rating:** {info['average_rating']} <img src='{imdb_logo_url}' width='40' height='40'/>",
                     unsafe_allow_html=True,
@@ -314,7 +341,7 @@ def search_handling(
 
 
             with st.expander("Reviews"):
-                for review, score in info['reviews'][:5]:
+                for review, score in info['reviews'][:3]:
                     st.write(f"**Review:** {review}")
                     st.write(f"**Rating:** {score}")
                     st.divider()
@@ -326,13 +353,17 @@ def search_handling(
                 related_movie_infos = [movie for movie in related_movie_infos if movie]
                 related_movie_infos = related_movie_infos[:5]
                 for related_movie_info in related_movie_infos:
+                    genres = ", ".join(related_movie_info["genres"])
                     st.markdown(f"""
                     <div style="display: flex; align-items: center; margin-bottom: 20px;">
                         <div style="flex: 1; text-align: left;">
                             <p style="margin: 0; font-weight: bold;">{related_movie_info['title']}</p>
                             <p style="margin: 5px 0;">
-                                Rating: {related_movie_info['average_rating']} 
+                                Average Rating: {related_movie_info['average_rating']} 
                                 <img src="{imdb_logo_url}" width="20" style="vertical-align: middle;"/>
+                            </p>
+                            <p style="margin: 5px 0;">
+                                Genres: {genres}
                             </p>
                             <a href="{related_movie_info['URL']}" target="_blank">Link to movie</a>
                         </div>
@@ -364,70 +395,83 @@ def main():
     )
 
     search_term = st.text_input("Seacrh Term")
+    spell_correction = st.checkbox("Enable Spell Correction", value=True)
     with st.expander("Advanced Search"):
+
+        search_method = st.selectbox(
+            "Search method", ("RAG retriever", "OkapiBM25", "ltn.lnn", "ltc.lnc", "unigram")
+        )
+
+
+        if search_method != "RAG retriever":
+            weight_stars = st.slider(
+                "Weight of stars in search",
+                min_value=0.0,
+                max_value=1.0,
+                value=1.0,
+                step=0.1,
+            )
+
+            weight_genres = st.slider(
+                "Weight of genres in search",
+                min_value=0.0,
+                max_value=1.0,
+                value=1.0,
+                step=0.1,
+            )
+
+            weight_summary = st.slider(
+                "Weight of summary in search",
+                min_value=0.0,
+                max_value=1.0,
+                value=1.0,
+                step=0.1,
+            )
+
+            search_weights = [weight_stars, weight_genres, weight_summary]
+
+
+            unigram_smoothing = None
+            alpha, lamda = None, None
+            if search_method == "unigram":
+                unigram_smoothing = st.selectbox(
+                    "Smoothing method",
+                    ("naive", "bayes", "mixture"),
+                )
+                if unigram_smoothing == "bayes":
+                    alpha = st.slider(
+                        "Alpha",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.5,
+                        step=0.1,
+                    )
+                if unigram_smoothing == "mixture":
+                    alpha = st.slider(
+                        "Alpha",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.5,
+                        step=0.1,
+                    )
+                    lamda = st.slider(
+                        "Lambda",
+                        min_value=0.0,
+                        max_value=1.0,
+                        value=0.5,
+                        step=0.1,
+                    )
+        else:
+            search_weights = None
+            unigram_smoothing = None
+            alpha, lamda = None, None
+
+
         search_max_num = st.number_input(
             "Maximum number of results", min_value=5, max_value=100, value=10, step=5
         )
-        weight_stars = st.slider(
-            "Weight of stars in search",
-            min_value=0.0,
-            max_value=1.0,
-            value=1.0,
-            step=0.1,
-        )
-
-        weight_genres = st.slider(
-            "Weight of genres in search",
-            min_value=0.0,
-            max_value=1.0,
-            value=1.0,
-            step=0.1,
-        )
-
-        weight_summary = st.slider(
-            "Weight of summary in search",
-            min_value=0.0,
-            max_value=1.0,
-            value=1.0,
-            step=0.1,
-        )
         slider_ = st.slider("Select the number of top movies to show", 1, 10, 5)
 
-        search_weights = [weight_stars, weight_genres, weight_summary]
-        search_method = st.selectbox(
-            "Search method", ("OkapiBM25", "ltn.lnn", "ltc.lnc", "unigram")
-        )
-
-        unigram_smoothing = None
-        alpha, lamda = None, None
-        if search_method == "unigram":
-            unigram_smoothing = st.selectbox(
-                "Smoothing method",
-                ("naive", "bayes", "mixture"),
-            )
-            if unigram_smoothing == "bayes":
-                alpha = st.slider(
-                    "Alpha",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.5,
-                    step=0.1,
-                )
-            if unigram_smoothing == "mixture":
-                alpha = st.slider(
-                    "Alpha",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.5,
-                    step=0.1,
-                )
-                lamda = st.slider(
-                    "Lambda",
-                    min_value=0.0,
-                    max_value=1.0,
-                    value=0.5,
-                    step=0.1,
-                )
 
     if "search_results" not in st.session_state:
         st.session_state["search_results"] = []
@@ -446,6 +490,7 @@ def main():
         lamda,
         filter_button,
         slider_,
+        spell_correction,
     )
 
 

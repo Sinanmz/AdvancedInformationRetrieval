@@ -26,8 +26,8 @@ else:
         data = json.load(f)
     movies_dataset = {}
     for movie in data:
-        temp = {'title': movie['title'] if movie['title'] else '', 
-                'first_page_summary': movie['first_page_summary'] if movie['first_page_summary'] else '', 
+        temp = {'title': movie['title'] if movie['title'] else 'N/A', 
+                'first_page_summary': movie['first_page_summary'] if movie['first_page_summary'] else 'N/A', 
                 'URL': f"https://www.imdb.com/title/{movie['id']}", 
                 'stars': movie['stars'] if movie['stars'] else [], 
                 'genres': movie['genres'] if movie['genres'] else [], 
@@ -37,7 +37,7 @@ else:
                 'writers': movie['writers'] if movie['writers'] else [], 
                 'reviews': movie['reviews'] if movie['reviews'] else [], 
                 'synopsis': movie['synposis'] if movie['synposis'] else [], 
-                'average_rating': movie['rating'] if movie['rating'] else '',
+                'average_rating': movie['rating'] if movie['rating'] else 'N/A',
                 'related_movies': [],
                 'Image_URL': 'https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg',
                 }
