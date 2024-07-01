@@ -24,16 +24,6 @@ import json
 snippet_obj = Snippet()
 
 
-from langchain.vectorstores.utils import DistanceStrategy
-import pickle
-
-with open(project_root+"/data/vectorstore.pkl", "rb") as f:
-    vectorstore = pickle.load(f)
-
-# load the retriever from the vectorstore
-retriever = vectorstore.as_retriever(search_kwargs={"k": 100, 'distance_strategy': DistanceStrategy.COSINE})
-
-
 class color(Enum):
     RED = "#FF0000"
     GREEN = "#00FF00"
@@ -283,12 +273,17 @@ def search_handling(
             start_time = time.time()
             if search_method == "RAG retriever":
                 if min_rating == 0.0:
-                    result = retriever.get_relevant_documents(search_term)[:search_max_num]
+                    result = utils.retriever.get_relevant_documents(search_term)[:search_max_num]
                     result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result)]
                 else:
-                    result = retriever.get_relevant_documents(search_term)
-                    result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result) if float(movie.metadata['rating']) >= min_rating]
-                    result = result[:search_max_num]
+                    retrieved = utils.retriever.get_relevant_documents(search_term)
+                    # result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result) if float(movie.metadata['rating']) >= min_rating]
+                    result = []
+                    for movie in retrieved:
+                        if float(movie.metadata['rating']) >= min_rating:
+                            result.append((movie.metadata['Movie ID'], retrieved.index(movie)))
+                        if len(result) == search_max_num:
+                            break
 
             else:
                 if min_rating == 0.0:
@@ -302,17 +297,25 @@ def search_handling(
                         lamda=lamda,
                     )
                 else:
-                    result = utils.search(
+                    retrieved = utils.search(
                         search_term,
-                        100,
+                        utils.number_of_movies,
                         search_method,
                         search_weights,
                         unigram_smoothing = unigram_smoothing,
                         alpha=alpha,
                         lamda=lamda,
                     )
-                    result = [(movie_id, score) for movie_id, score in result if utils.get_movie_by_id(movie_id, utils.movies_dataset)["average_rating"] >= min_rating]
-                    result = result[:search_max_num]
+                    # result = [(movie_id, score) for movie_id, score in result if utils.get_movie_by_id(movie_id, utils.movies_dataset)["average_rating"] >= min_rating]
+                    result = []
+                    for movie_id, score in retrieved:
+                        movie_rating = utils.get_movie_by_id(movie_id, utils.movies_dataset)["average_rating"]
+                        if movie_rating == 'N/A':
+                            continue
+                        if float(movie_rating) >= min_rating:
+                            result.append((movie_id, score))
+                        if len(result) == search_max_num:
+                            break
 
             if "search_results" in st.session_state:
                 st.session_state["search_results"] = result
@@ -323,8 +326,9 @@ def search_handling(
                 return
 
             search_time(start_time, end_time)
+        print("AAAAAAA************:", len(result))
 
-        for i in range(min(len(result), num_filter_results)):
+        for i in range(len(result)):
             card = st.columns([3, 1])
             info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
             with card[0].container():
