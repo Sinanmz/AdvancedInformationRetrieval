@@ -25,10 +25,6 @@ from transformers import pipeline
 
 fix_spelling = pipeline("text2text-generation",model="oliverguhr/spelling-correction-english-base")
 
-# print(fix_spelling("lets do a comparsion",max_length=2048))
-
-
-
 
 if os.path.exists(project_root + '/data/movies_by_id.json'):
     with open(project_root + '/data/movies_by_id.json', 'r') as f:
