@@ -16,6 +16,11 @@ from Logic.core.utility.preprocess import Preprocessor
 from typing import Dict, List
 import json
 
+from langchain.vectorstores.utils import DistanceStrategy
+import pickle
+from Logic.core.vectorized_retriever.vectorizer import vectorize
+
+
 
 if os.path.exists(project_root + '/data/movies_by_id.json'):
     with open(project_root + '/data/movies_by_id.json', 'r') as f:
@@ -51,6 +56,8 @@ else:
         movies_dataset[movie['id']] = temp
     with open(project_root + '/data/movies_by_id.json', 'w') as f:
         json.dump(movies_dataset, f)
+
+number_of_movies = len(movies_dataset)
 
 search_engine = SearchEngine()
 
@@ -214,3 +221,14 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
     # return result
     movie = movies_dataset.get(id)
     return movie
+
+
+if not os.path.exists(project_root+"/data/vectorstore.pkl"):
+    vectorize()
+
+with open(project_root+"/data/vectorstore.pkl", "rb") as f:
+    vectorstore = pickle.load(f)
+
+# load the retriever from the vectorstore
+retriever = vectorstore.as_retriever(search_kwargs={"k": number_of_movies, 'distance_strategy': DistanceStrategy.COSINE})
+
