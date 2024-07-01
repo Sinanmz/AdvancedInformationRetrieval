@@ -160,6 +160,7 @@ def search_handling(
     filter_button,
     num_filter_results,
     spell_correction,
+    min_rating,
 ):
     imdb_logo_url = "https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg"
 
@@ -196,14 +197,19 @@ def search_handling(
             with st.container():
                 st.markdown("**Directors:**")
                 num_authors = len(info["directors"])
+                if num_authors == 0:
+                    st.text("N/A")
                 for j in range(num_authors):
                     st.text(info["directors"][j])
 
             with st.container():
                 st.markdown("**Stars:**")
                 num_authors = len(info["stars"])
-                stars = "".join(star + ", " for star in info["stars"])
-                st.text(stars[:-2])
+                if num_authors == 0:
+                    st.text("N/A")
+                else:
+                    stars = "".join(star + ", " for star in info["stars"])
+                    st.text(stars[:-2])
 
                 topic_card = st.columns(1)
                 with topic_card[0].container():
@@ -276,18 +282,38 @@ def search_handling(
             # time.sleep(0.5)  # for showing the spinner! (can be removed)
             start_time = time.time()
             if search_method == "RAG retriever":
-                result = retriever.get_relevant_documents(search_term)[:search_max_num]
-                result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result)]
+                if min_rating == 0.0:
+                    result = retriever.get_relevant_documents(search_term)[:search_max_num]
+                    result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result)]
+                else:
+                    result = retriever.get_relevant_documents(search_term)
+                    result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result) if float(movie.metadata['rating']) >= min_rating]
+                    result = result[:search_max_num]
+
             else:
-                result = utils.search(
-                    search_term,
-                    search_max_num,
-                    search_method,
-                    search_weights,
-                    unigram_smoothing = unigram_smoothing,
-                    alpha=alpha,
-                    lamda=lamda,
-                )
+                if min_rating == 0.0:
+                    result = utils.search(
+                        search_term,
+                        search_max_num,
+                        search_method,
+                        search_weights,
+                        unigram_smoothing = unigram_smoothing,
+                        alpha=alpha,
+                        lamda=lamda,
+                    )
+                else:
+                    result = utils.search(
+                        search_term,
+                        100,
+                        search_method,
+                        search_weights,
+                        unigram_smoothing = unigram_smoothing,
+                        alpha=alpha,
+                        lamda=lamda,
+                    )
+                    result = [(movie_id, score) for movie_id, score in result if utils.get_movie_by_id(movie_id, utils.movies_dataset)["average_rating"] >= min_rating]
+                    result = result[:search_max_num]
+
             if "search_results" in st.session_state:
                 st.session_state["search_results"] = result
             print(f"Result: {result}")
@@ -298,7 +324,7 @@ def search_handling(
 
             search_time(start_time, end_time)
 
-        for i in range(len(result)):
+        for i in range(min(len(result), num_filter_results)):
             card = st.columns([3, 1])
             info = utils.get_movie_by_id(result[i][0], utils.movies_dataset)
             with card[0].container():
@@ -320,14 +346,19 @@ def search_handling(
             with st.container():
                 st.markdown("**Directors:**")
                 num_authors = len(info["directors"])
+                if num_authors == 0:
+                    st.text("N/A")
                 for j in range(num_authors):
                     st.text(info["directors"][j])
 
             with st.container():
                 st.markdown("**Stars:**")
                 num_authors = len(info["stars"])
-                stars = "".join(star + ", " for star in info["stars"])
-                st.text(stars[:-2])
+                if num_authors == 0:
+                    st.text("N/A")
+                else:
+                    stars = "".join(star + ", " for star in info["stars"])
+                    st.text(stars[:-2])
 
                 topic_card = st.columns(1)
                 with topic_card[0].container():
@@ -476,6 +507,14 @@ def main():
         )
         slider_ = st.slider("Select the number of top movies to show", 1, 10, 5)
 
+        min_rating = st.slider(
+                "Minimum Rating of Movies",
+                min_value=0.0,
+                max_value=10.0,
+                value=0.0,
+                step=0.5,
+            )
+
 
     if "search_results" not in st.session_state:
         st.session_state["search_results"] = []
@@ -495,6 +534,7 @@ def main():
         filter_button,
         slider_,
         spell_correction,
+        min_rating,
     )
 
 
