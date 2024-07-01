@@ -91,8 +91,8 @@ else:
                 if writer:
                     all_documents.append(preprocessor.normalize(writer))
 
-        if movie["synopsis"]:
-            all_documents.extend(movie["synopsis"])
+        # if movie["synopsis"]:
+        #     all_documents.extend(movie["synopsis"])
 
         if movie["reviews"]:
             for review in movie["reviews"][:2]:
