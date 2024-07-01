@@ -277,7 +277,6 @@ def search_handling(
                     result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result)]
                 else:
                     retrieved = utils.retriever.get_relevant_documents(search_term)
-                    # result = [(movie.metadata['Movie ID'], i) for i, movie in enumerate(result) if float(movie.metadata['rating']) >= min_rating]
                     result = []
                     for movie in retrieved:
                         if float(movie.metadata['rating']) >= min_rating:
@@ -306,7 +305,6 @@ def search_handling(
                         alpha=alpha,
                         lamda=lamda,
                     )
-                    # result = [(movie_id, score) for movie_id, score in result if utils.get_movie_by_id(movie_id, utils.movies_dataset)["average_rating"] >= min_rating]
                     result = []
                     for movie_id, score in retrieved:
                         movie_rating = utils.get_movie_by_id(movie_id, utils.movies_dataset)["average_rating"]
@@ -326,7 +324,6 @@ def search_handling(
                 return
 
             search_time(start_time, end_time)
-        print("AAAAAAA************:", len(result))
 
         for i in range(len(result)):
             card = st.columns([3, 1])
