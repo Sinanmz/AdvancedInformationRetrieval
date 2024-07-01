@@ -35,36 +35,13 @@ class color(Enum):
 
 
 def get_top_x_movies_by_rank(x: int, results: list):
-    # path = project_root+'/index/' # Link to the index folder
-    # document_index = Index_reader(path, Indexes.DOCUMENTS)
-    # corpus = []
-    # root_set = []
-    # for movie_id, movie_detail in document_index.index.items():
-    #     movie_title = movie_detail["title"]
-    #     stars = movie_detail["stars"]
-    #     corpus.append({"id": movie_id, "title": movie_title, "stars": stars})
-
-    # for element in results:
-    #     movie_id = element[0]
-    #     movie_detail = document_index.index[movie_id]
-    #     movie_title = movie_detail["title"]
-    #     stars = movie_detail["stars"]
-    #     root_set.append({"id": movie_id, "title": movie_title, "stars": stars})
-
-    crawled_path = project_root + "/data/IMDB_Crawled.json"
-    with open(crawled_path, "r") as f:
-        data = json.load(f)
     root_set = []
     corpus = []
     root_ids = [element[0] for element in results]
-    for movie in data:
-        if movie['id'] and movie['title']:
-            id = movie['id']
-            title = movie['title']
-            stars = movie['stars'] if movie['stars'] else []
-            corpus.append({"id": id, "title": title, "stars": stars})
-            if id in root_ids:
-                root_set.append({"id": id, "title": title, "stars": stars})
+    for id in root_ids:
+        root_set.append({"id": id, 
+                         "title": utils.get_movie_by_id(id, utils.movies_dataset)["title"], 
+                         "stars": utils.get_movie_by_id(id, utils.movies_dataset)["stars"]})
 
     analyzer = LinkAnalyzer(root_set=root_set)
     analyzer.expand_graph(corpus=corpus)
