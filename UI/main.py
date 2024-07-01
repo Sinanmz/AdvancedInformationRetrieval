@@ -194,7 +194,6 @@ def search_handling(
             st.divider()
 
 
-            # Add reviews in a dropdown
             with st.expander("Reviews"):
                 for review, score in info['reviews'][:3]:
                     st.write(f"**Review:** {review}")
@@ -232,22 +231,21 @@ def search_handling(
 
 
             st.divider()
-
-
         return
 
     if search_button:
-        if spell_correction:
-            if spell_correction_type == "Classical":
-                corrected_query = utils.correct_text(search_term, utils.all_documents)
+        with st.spinner("Spell Correction..."):
+            if spell_correction:
+                if spell_correction_type == "Classical":
+                    corrected_query = utils.correct_text(search_term, utils.all_documents)
+                else:
+                    corrected_query = utils.fix_spelling(search_term, max_length = 2048)[0]['generated_text']
             else:
-                corrected_query = utils.fix_spelling(search_term, max_length = 2048)[0]['generated_text']
-        else:
-            corrected_query = search_term
+                corrected_query = search_term
 
-        if corrected_query.strip() != search_term.strip():
-            st.warning(f"Your search terms were corrected to: {corrected_query}")
-            search_term = corrected_query
+            if corrected_query.strip() != search_term.strip():
+                st.warning(f"Your search terms were corrected to: {corrected_query}")
+                search_term = corrected_query
 
         with st.spinner("Searching..."):
             # time.sleep(0.5)  # for showing the spinner! (can be removed)
