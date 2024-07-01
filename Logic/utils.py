@@ -19,6 +19,14 @@ import json
 from langchain.vectorstores.utils import DistanceStrategy
 import pickle
 from Logic.core.vectorized_retriever.vectorizer import vectorize
+from tqdm import tqdm
+
+from transformers import pipeline
+
+fix_spelling = pipeline("text2text-generation",model="oliverguhr/spelling-correction-english-base")
+
+# print(fix_spelling("lets do a comparsion",max_length=2048))
+
 
 
 
@@ -30,7 +38,7 @@ else:
     with open(data_path, 'r') as f:
         data = json.load(f)
     movies_dataset = {}
-    for movie in data:
+    for movie in tqdm(data, desc="Creating one of the needed files."):
         temp = {'title': movie['title'] if movie['title'] else 'N/A', 
                 'first_page_summary': movie['first_page_summary'] if movie['first_page_summary'] else 'N/A', 
                 'URL': f"https://www.imdb.com/title/{movie['id']}", 
@@ -67,7 +75,7 @@ if os.path.exists(project_root + '/data/spell_correction_texts.json'):
 else:
     preprocessor = Preprocessor([])
     all_documents = []
-    for movie in movies_dataset.values():
+    for movie in tqdm(movies_dataset.values(), "Creating corpus for spell correction."):
         if movie["title"]:
             all_documents.append(movie["title"])
 
@@ -224,10 +232,14 @@ def get_movie_by_id(id: str, movies_dataset: List[Dict[str, str]]) -> Dict[str, 
 
 
 if not os.path.exists(project_root+"/data/vectorstore.pkl"):
+    print("Not fount Vectorstore file. Creating one...")
     vectorize()
+    print("Vectorstore created successfully.")
 
 with open(project_root+"/data/vectorstore.pkl", "rb") as f:
+    print("Loading vectorstore...")
     vectorstore = pickle.load(f)
+    print("Vectorstore loaded successfully.")
 
 # load the retriever from the vectorstore
 retriever = vectorstore.as_retriever(search_kwargs={"k": number_of_movies, 'distance_strategy': DistanceStrategy.COSINE})

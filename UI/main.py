@@ -150,6 +150,7 @@ def search_handling(
     filter_button,
     num_filter_results,
     spell_correction,
+    spell_correction_type,
     min_rating,
 ):
     imdb_logo_url = "https://upload.wikimedia.org/wikipedia/commons/6/69/IMDB_Logo_2016.svg"
@@ -260,7 +261,10 @@ def search_handling(
 
     if search_button:
         if spell_correction:
-            corrected_query = utils.correct_text(search_term, utils.all_documents)
+            if spell_correction_type == "Classical":
+                corrected_query = utils.correct_text(search_term, utils.all_documents)
+            else:
+                corrected_query = utils.fix_spelling(search_term, max_length = 2048)[0]['generated_text']
         else:
             corrected_query = search_term
 
@@ -431,11 +435,17 @@ def main():
     )
 
     search_term = st.text_input("Seacrh Term")
-    spell_correction = st.checkbox("Enable Spell Correction", value=True)
+
+    with st.expander("Spell Correction Options"):
+        spell_correction = st.checkbox("Enable Spell Correction", value=True)
+        spell_correction_type = st.selectbox(
+            "Spell Correction Method", ("Transformer Based (BART)", "Classical")
+        )
+
     with st.expander("Advanced Search"):
 
         search_method = st.selectbox(
-            "Search method", ("RAG retriever", "OkapiBM25", "ltn.lnn", "ltc.lnc", "unigram")
+            "Search Method", ("RAG retriever", "OkapiBM25", "ltn.lnn", "ltc.lnc", "unigram")
         )
 
 
@@ -535,6 +545,7 @@ def main():
         filter_button,
         slider_,
         spell_correction,
+        spell_correction_type,
         min_rating,
     )
 
